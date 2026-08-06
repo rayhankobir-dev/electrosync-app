@@ -101,7 +101,7 @@ export default function MeterDetailScreen() {
             accessibilityRole="button"
             accessibilityLabel={t("common.back")}
             hitSlop={HitSlop / 4}
-            onPress={() => router.back()}
+            onPress={() => router.push("/(app)/meters")}
           >
             <Icon icon={ArrowLeft01Icon} color="textSecondary" />
           </Pressable>
@@ -296,7 +296,7 @@ function summariseRecharges(recharges: readonly UtilityRecharge[], now: Date) {
 }
 
 function RechargesPanel({ query }: { query: ReturnType<typeof useRecharges> }) {
-  const { t, formatCurrency, formatDate, formatNumber } = useI18n();
+  const { t, formatCurrency, formatDate } = useI18n();
 
   const columns: readonly Column<UtilityRecharge>[] = [
     {
@@ -588,7 +588,10 @@ function SummaryGrid({ children }: { children: ReactNode }) {
         <Fragment key={index}>
           {index > 0 ? (
             <View
-              style={[styles.summaryDivider, { backgroundColor: colors.border }]}
+              style={[
+                styles.summaryDivider,
+                { backgroundColor: colors.border },
+              ]}
             />
           ) : null}
           {cell}

@@ -1,4 +1,4 @@
-import { Link } from "expo-router";
+import { Link, router } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
 
@@ -10,47 +10,64 @@ import { Button } from "@/components/ui/button";
 import { Screen } from "@/components/ui/screen";
 import { Text } from "@/components/ui/text";
 import { TextField } from "@/components/ui/text-field";
+import { useToast } from "@/components/ui/toast-host";
 import { useI18n, type TranslationKey } from "@/i18n";
 import { isValidEmail } from "@/lib/validation";
 import { useSession } from "@/session";
 import { Spacing } from "@/theme";
 
-export default function SignInScreen() {
+export default function ForgotPasswordScreen() {
   const { t } = useI18n();
-  const { signIn } = useSession();
+  const { api } = useSession();
+  const toast = useToast();
 
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [fieldErrors, setFieldErrors] = useState<{
-    email?: string;
-    password?: string;
-  }>({});
+  const [emailError, setEmailError] = useState<string | undefined>();
   const [formError, setFormError] = useState<TranslationKey | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit() {
-    const errors: typeof fieldErrors = {};
-    if (!email.trim()) errors.email = t("auth.validation.emailRequired");
-    else if (!isValidEmail(email))
-      errors.email = t("auth.validation.emailInvalid");
-    if (!password) errors.password = t("auth.validation.passwordRequired");
+    const trimmed = email.trim();
 
-    setFieldErrors(errors);
     setFormError(null);
-    if (Object.keys(errors).length > 0) return;
 
+    if (!trimmed) {
+      setEmailError(t("auth.validation.emailRequired"));
+      return;
+    }
+    if (!isValidEmail(trimmed)) {
+      setEmailError(t("auth.validation.emailInvalid"));
+      return;
+    }
+
+    setEmailError(undefined);
     setSubmitting(true);
+
     try {
-      await signIn({ email: email.trim(), password });
+      await api.auth.forgotPassword({ email: trimmed });
+
+      /**
+       * Straight on to the code screen, carrying the email so the next step can
+       * name it and resend without asking again.
+       *
+       * `replace`, not `push`: coming *back* here would offer to send a second
+       * code, which the server's one-per-minute cooldown would refuse. The way
+       * back to a fresh request is the sign-in screen, which the next screen
+       * links to.
+       */
+      router.replace({
+        pathname: "/reset-password",
+        params: { email: trimmed },
+      });
+
+      /**
+       * Hedged wording, because the server deliberately answers the same way for
+       * a registered and an unregistered email — so this screen genuinely does
+       * not know which happened, and promising "we sent it" would be a guess.
+       */
+      toast.info(t("auth.forgotPassword.sent"));
     } catch (error) {
-      console.log(error);
-      setFormError(
-        isApiError(error)
-          ? error.isUnauthorized
-            ? "errors.invalidCredentials"
-            : error.messageKey
-          : "errors.unknown",
-      );
+      setFormError(isApiError(error) ? error.messageKey : "errors.unknown");
     } finally {
       setSubmitting(false);
     }
@@ -65,9 +82,9 @@ export default function SignInScreen() {
       <View style={styles.header}>
         <BrandMark />
         <View style={styles.headings}>
-          <Text variant="title1">{t("auth.signIn.title")}</Text>
+          <Text variant="title1">{t("auth.forgotPassword.title")}</Text>
           <Text variant="callout" color="textSecondary">
-            {t("auth.signIn.subtitle")}
+            {t("auth.forgotPassword.subtitle")}
           </Text>
         </View>
       </View>
@@ -81,44 +98,18 @@ export default function SignInScreen() {
           placeholder={t("auth.fields.emailPlaceholder")}
           value={email}
           onChangeText={setEmail}
-          error={fieldErrors.email}
+          error={emailError}
           autoCapitalize="none"
           autoComplete="email"
           keyboardType="email-address"
           textContentType="emailAddress"
-          returnKeyType="next"
-        />
-
-        <TextField
-          label={t("auth.fields.password")}
-          required
-          placeholder={t("auth.fields.passwordPlaceholder")}
-          value={password}
-          onChangeText={setPassword}
-          error={fieldErrors.password}
-          secureTextEntry
-          autoCapitalize="none"
-          autoComplete="current-password"
-          textContentType="password"
           returnKeyType="go"
+          autoFocus
           onSubmitEditing={() => void handleSubmit()}
         />
 
-        {/* Directly under the field it relates to, rather than in the footer
-            beside the sign-up link — two unrelated escape hatches sitting
-            together read as one ambiguous choice. */}
-        <Link href="/forgot-password" asChild>
-          <Text
-            variant="footnote"
-            color="primary"
-            accessibilityRole="link"
-            style={styles.forgot}>
-            {t("auth.signIn.forgotPassword")}
-          </Text>
-        </Link>
-
         <Button
-          label={t("auth.signIn.submit")}
+          label={t("auth.forgotPassword.submit")}
           loading={submitting}
           onPress={() => void handleSubmit()}
           style={styles.submit}
@@ -126,12 +117,9 @@ export default function SignInScreen() {
       </View>
 
       <View style={styles.footer}>
-        <Text variant="footnote" color="textSecondary">
-          {t("auth.signIn.noAccount")}
-        </Text>
-        <Link href="/sign-up" asChild>
+        <Link href="/sign-in" asChild>
           <Text variant="footnote" color="primary" accessibilityRole="link">
-            {t("auth.signIn.goToSignUp")}
+            {t("auth.forgotPassword.backToSignIn")}
           </Text>
         </Link>
       </View>
@@ -153,12 +141,6 @@ const styles = StyleSheet.create({
   },
   form: {
     gap: Spacing.lg,
-  },
-  forgot: {
-    alignSelf: "flex-end",
-    // Pulls back against the form's `gap`, so the link reads as belonging to the
-    // password field above it rather than floating between two fields.
-    marginTop: -Spacing.sm,
   },
   submit: {
     marginTop: Spacing.sm,

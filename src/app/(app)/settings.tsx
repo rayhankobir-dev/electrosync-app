@@ -10,10 +10,19 @@ import {
 import type { IconSvgElement } from "@hugeicons/react-native";
 import Constants from "expo-constants";
 import { useState, type ReactNode } from "react";
-import { Alert, Platform, StyleSheet, View } from "react-native";
+import {
+  Alert,
+  Linking,
+  Platform,
+  Pressable,
+  StyleSheet,
+  View,
+} from "react-native";
 
 import { isApiError } from "@/api/errors";
+import type { UpdateUserSettingsPayload } from "@/api/types";
 import { AccountCard } from "@/components/account-card";
+import { BrandMark } from "@/components/brand-mark";
 import { LanguageToggle } from "@/components/language-toggle";
 import { ScreenHeader } from "@/components/screen-header";
 import { Banner } from "@/components/ui/banner";
@@ -26,11 +35,12 @@ import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Switch } from "@/components/ui/switch";
 import { Text } from "@/components/ui/text";
 import { TextField } from "@/components/ui/text-field";
+import { useToast } from "@/components/ui/toast-host";
 import {
   useUpdateUserSettings,
   useUserSettings,
 } from "@/hooks/use-user-settings";
-import { useI18n } from "@/i18n";
+import { useI18n, type TranslationKey } from "@/i18n";
 import {
   parseWholeAmount,
   THRESHOLD_MAX,
@@ -61,9 +71,11 @@ export default function SettingsScreen() {
   }
 
   return (
-    <Screen scrollable edgeToEdgeBottom={false}>
-      <ScreenHeader title={t("settings.title")} />
-
+    <Screen
+      scrollable
+      edgeToEdgeBottom={false}
+      header={<ScreenHeader title={t("settings.title")} />}
+    >
       {user ? (
         <View style={styles.block}>
           <AccountCard user={user} />
@@ -104,22 +116,58 @@ export default function SettingsScreen() {
         </ListGroup>
       </View>
 
-      <Text
-        variant="footnote"
-        color="textTertiary"
-        align="center"
-        style={styles.version}
-      >
-        {`${t("common.appName")} ${Constants.expoConfig?.version ?? ""}`.trim()}
-      </Text>
+      {/* Sits under the last group rather than at the top of the screen: the
+          mark is a sign-off, not a heading, and the settings the user came for
+          should be the first thing on the page. */}
+      <View style={styles.footer}>
+        <BrandMark size={48} />
+        <Text variant="footnote" color="textTertiary" align="center">
+          {`${t("common.appName")} ${
+            Constants.expoConfig?.version ?? ""
+          }`.trim()}
+        </Text>
+        <DeveloperCredit />
+      </View>
     </Screen>
+  );
+}
+
+const DEVELOPER = { name: "coderbrix.com", url: "https://coderbrix.com" };
+
+/**
+ * The whole line is the target, not just the domain inside it: splitting the
+ * sentence so only "coderbrix.com" responds would leave a tap target a few
+ * characters wide at footnote size, and the credit reads as one phrase anyway.
+ */
+function DeveloperCredit() {
+  const { t } = useI18n();
+  const toast = useToast();
+
+  return (
+    <Pressable
+      accessibilityRole="link"
+      accessibilityLabel={t("common.developedBy", { company: DEVELOPER.name })}
+      hitSlop={Spacing.sm}
+      // Rejects when the device has nothing registered for https — rare, but a
+      // credit that appears to do nothing on tap is worse than one that says why.
+      onPress={() =>
+        void Linking.openURL(DEVELOPER.url).catch(() =>
+          toast.error(t("common.linkFailed")),
+        )
+      }
+    >
+      <Text variant="caption" color="textTertiary" align="center">
+        {t("common.developedBy", { company: DEVELOPER.name })}
+      </Text>
+    </Pressable>
   );
 }
 
 const THRESHOLDS = [50, 100, 200, 500] as const;
 
 function Notifications() {
-  const { t } = useI18n();
+  const { t, formatCurrency } = useI18n();
+  const toast = useToast();
   const {
     data: settings,
     isError,
@@ -128,6 +176,40 @@ function Notifications() {
     refetch,
   } = useUserSettings();
   const { mutate } = useUpdateUserSettings();
+
+  /**
+   * Every control in this section commits through here, so the confirmation is
+   * written once rather than repeated at four call sites.
+   *
+   * Why confirm at all, when the write is optimistic and the switch has already
+   * moved? Precisely because it has. The optimistic update means the control
+   * looks identical whether the request reached the server or is still in flight,
+   * so without a message the user has no way to tell a saved preference from one
+   * that is about to silently roll back.
+   */
+  function save(payload: UpdateUserSettingsPayload, confirmation: string) {
+    mutate(payload, {
+      onSuccess: () => toast.success(confirmation),
+      // The hook has already put the control back by the time this runs; this
+      // only supplies the reason, which the reverting switch cannot.
+      onError: (cause: unknown) =>
+        toast.error(
+          t("settings.saveFailed"),
+          t(isApiError(cause) ? cause.messageKey : "errors.unknown"),
+        ),
+    });
+  }
+
+  /**
+   * "Push notifications turned on" — the setting's own label plus its new state.
+   * Named rather than a bare "Saved" because four controls share one toast slot,
+   * and an unattributed acknowledgement does not say which one it belongs to.
+   */
+  function toggled(setting: TranslationKey, on: boolean): string {
+    return t(on ? "settings.turnedOn" : "settings.turnedOff", {
+      setting: t(setting),
+    });
+  }
 
   if (isError) {
     return (
@@ -171,7 +253,12 @@ function Notifications() {
           <Switch
             value={pushEnabled}
             disabled={loading}
-            onValueChange={(next) => mutate({ pushEnabled: next })}
+            onValueChange={(next) =>
+              save(
+                { pushEnabled: next },
+                toggled("settings.pushEnabled", next),
+              )
+            }
             accessibilityLabel={t("settings.pushEnabled")}
           />
         }
@@ -185,7 +272,12 @@ function Notifications() {
           <Switch
             value={lowBalanceAlerts}
             disabled={mutedByPush}
-            onValueChange={(next) => mutate({ lowBalanceAlerts: next })}
+            onValueChange={(next) =>
+              save(
+                { lowBalanceAlerts: next },
+                toggled("settings.lowBalanceAlerts", next),
+              )
+            }
             accessibilityLabel={t("settings.lowBalanceAlerts")}
           />
         }
@@ -195,7 +287,14 @@ function Notifications() {
         label={t("settings.lowBalanceThreshold")}
         value={threshold}
         disabled={mutedByPush || !lowBalanceAlerts}
-        onChange={(next) => mutate({ lowBalanceThreshold: next })}
+        onChange={(next) =>
+          // Not the on/off template: an amount is not a state being switched, so
+          // it confirms by restating the rule the user just set.
+          save(
+            { lowBalanceThreshold: next },
+            t("settings.thresholdSaved", { amount: formatCurrency(next, 0) }),
+          )
+        }
       />
 
       <ListRow
@@ -206,7 +305,12 @@ function Notifications() {
           <Switch
             value={rechargeAlerts}
             disabled={mutedByPush}
-            onValueChange={(next) => mutate({ rechargeAlerts: next })}
+            onValueChange={(next) =>
+              save(
+                { rechargeAlerts: next },
+                toggled("settings.rechargeAlerts", next),
+              )
+            }
             accessibilityLabel={t("settings.rechargeAlerts")}
           />
         }
@@ -308,8 +412,6 @@ function ThresholdRow({
   return (
     <View
       style={[styles.threshold, disabled ? styles.thresholdDisabled : null]}
-      // `SegmentedControl` has no disabled state of its own, and blocking touches
-      // at the wrapper avoids giving it one just for this caller.
       pointerEvents={disabled ? "none" : "auto"}
     >
       <Text variant="subhead" color="textSecondary">
@@ -421,7 +523,11 @@ const styles = StyleSheet.create({
   thresholdDisabled: {
     opacity: 0.4,
   },
-  version: {
+  footer: {
+    alignItems: "center",
+    // Tighter than the gap between sections: the mark and the version line read
+    // as one lockup, not as two more items in the list above them.
+    gap: Spacing.xs,
     marginTop: Spacing.sm,
   },
 });

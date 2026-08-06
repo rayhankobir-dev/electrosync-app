@@ -8,7 +8,6 @@ import {
   type TextInputProps,
 } from 'react-native';
 
-import { useI18n } from '@/i18n';
 import { fontFamily, HitSlop, Radius, Spacing, TypeScale, useTheme } from '@/theme';
 
 import { Icon } from './icon';
@@ -38,7 +37,6 @@ export function TextField({
   ...rest
 }: TextFieldProps) {
   const { colors } = useTheme();
-  const { locale } = useI18n();
   const [focused, setFocused] = useState(false);
   const [revealed, setRevealed] = useState(false);
 
@@ -73,7 +71,7 @@ export function TextField({
             styles.input,
             {
               color: colors.text,
-              fontFamily: fontFamily(locale, TypeScale.body.weight),
+              fontFamily: fontFamily(TypeScale.body.weight),
               fontSize: TypeScale.body.size,
             },
           ]}

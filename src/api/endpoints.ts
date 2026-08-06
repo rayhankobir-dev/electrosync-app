@@ -1,6 +1,7 @@
 import type { ApiClient } from './client';
 import type {
   AddMeterPayload,
+  ForgotPasswordPayload,
   IssuedToken,
   LoginPayload,
   Meter,
@@ -11,6 +12,7 @@ import type {
   Notification,
   RegisterDeviceTokenPayload,
   RegisterPayload,
+  ResetPasswordPayload,
   UpdateMeterPayload,
   UpdateProfilePayload,
   UpdateUserSettingsPayload,
@@ -36,6 +38,25 @@ export function createEndpoints(client: ApiClient) {
 
       login: (payload: LoginPayload) =>
         client.request<IssuedToken>('/auth/login', {
+          method: 'POST',
+          body: payload,
+          anonymous: true,
+        }),
+
+      /**
+       * Always resolves for a well-formed email, whether or not an account
+       * exists — the server will not say which, so the screen can only report
+       * that a code was sent *if* the address is registered.
+       */
+      forgotPassword: (payload: ForgotPasswordPayload) =>
+        client.request<void>('/auth/forgot-password', {
+          method: 'POST',
+          body: payload,
+          anonymous: true,
+        }),
+
+      resetPassword: (payload: ResetPasswordPayload) =>
+        client.request<IssuedToken>('/auth/reset-password', {
           method: 'POST',
           body: payload,
           anonymous: true,

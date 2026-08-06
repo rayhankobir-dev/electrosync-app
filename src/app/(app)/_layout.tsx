@@ -54,48 +54,48 @@ function AppTabs() {
         screenOptions={{ headerShown: false }}
         tabBar={(props) => <AppTabBar {...props} />}
       >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: t("common.appName"),
-          tabBarIcon: ({ focused }) => (
-            <Icon
-              icon={Home01Icon}
-              color={focused ? "primary" : "textTertiary"}
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="meters"
-        options={{
-          title: t("meters.title"),
-          tabBarIcon: ({ focused }) => (
-            <Icon
-              icon={DashboardSpeed01Icon}
-              color={focused ? "primary" : "textTertiary"}
-            />
-          ),
-        }}
-      />
-      {/* Nested detail route. Without `href: null` Tabs would add it to the
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: t("common.home"),
+            tabBarIcon: ({ focused }) => (
+              <Icon
+                icon={Home01Icon}
+                color={focused ? "primary" : "textTertiary"}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="meters"
+          options={{
+            title: t("meters.title"),
+            tabBarIcon: ({ focused }) => (
+              <Icon
+                icon={DashboardSpeed01Icon}
+                color={focused ? "primary" : "textTertiary"}
+              />
+            ),
+          }}
+        />
+        {/* Nested detail route. Without `href: null` Tabs would add it to the
           tab bar alongside the real tabs. */}
-      <Tabs.Screen name="meter/[id]" options={{ href: null }} />
+        <Tabs.Screen name="meter/[id]" options={{ href: null }} />
 
-      {/* Reached from the header bell, not the tab bar. */}
-      <Tabs.Screen name="notifications" options={{ href: null }} />
+        {/* Reached from the header bell, not the tab bar. */}
+        <Tabs.Screen name="notifications" options={{ href: null }} />
 
-      <Tabs.Screen
-        name="settings"
-        options={{
-          title: t("settings.title"),
-          tabBarIcon: ({ focused }) => (
-            <Icon
-              icon={Settings01Icon}
-              color={focused ? "primary" : "textTertiary"}
-            />
-          ),
-        }}
+        <Tabs.Screen
+          name="settings"
+          options={{
+            title: t("settings.title"),
+            tabBarIcon: ({ focused }) => (
+              <Icon
+                icon={Settings01Icon}
+                color={focused ? "primary" : "textTertiary"}
+              />
+            ),
+          }}
         />
       </Tabs>
 

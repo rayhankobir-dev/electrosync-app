@@ -157,7 +157,7 @@ function TabItem({
       onLongPress={onLongPress}
       style={styles.item}>
       {icon?.({ focused, color: tint, size: 22 })}
-      {/* The project's own Text, so the label picks up Hind Siliguri in Bangla —
+      {/* The project's own Text, so the label picks up Hind Siliguri —
           react-navigation's built-in label would need the family threaded in by
           hand through `tabBarLabelStyle`. */}
       <Text variant="caption" color={focused ? 'primary' : 'textTertiary'} numberOfLines={1}>

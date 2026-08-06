@@ -1,6 +1,7 @@
 {
   "common": {
     "appName": "ElectroSync",
+    "home": "Home",
     "tagline": "Track your prepaid electricity, effortlessly.",
     "continue": "Continue",
     "cancel": "Cancel",
@@ -11,7 +12,9 @@
     "done": "Done",
     "loading": "Loading",
     "optional": "optional",
-    "currencySymbol": "৳"
+    "currencySymbol": "৳",
+    "developedBy": "Developed by {{company}}",
+    "linkFailed": "Couldn't open the link"
   },
   "auth": {
     "signIn": {
@@ -19,7 +22,8 @@
       "subtitle": "Sign in to check your meter balance.",
       "submit": "Sign in",
       "noAccount": "Don't have an account?",
-      "goToSignUp": "Create one"
+      "goToSignUp": "Create one",
+      "forgotPassword": "Forgot password?"
     },
     "signUp": {
       "title": "Create your account",
@@ -27,6 +31,27 @@
       "submit": "Create account",
       "hasAccount": "Already have an account?",
       "goToSignIn": "Sign in"
+    },
+    "forgotPassword": {
+      "title": "Forgot your password?",
+      "subtitle": "Enter your email and we'll send you a 6-digit code.",
+      "submit": "Send code",
+      "sent": "If that email is registered, we've sent a code to it.",
+      "backToSignIn": "Back to sign in"
+    },
+    "resetPassword": {
+      "title": "Enter your code",
+      "subtitle": "We sent a 6-digit code to {{email}}. It expires in 15 minutes.",
+      "submit": "Set new password",
+      "code": "Reset code",
+      "codePlaceholder": "6 digits",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm new password",
+      "confirmPlaceholder": "Type it once more",
+      "resend": "Resend code",
+      "resendIn": "Resend in {{seconds}}s",
+      "resent": "A new code is on its way.",
+      "success": "Password changed. You're signed in."
     },
     "fields": {
       "name": "Full name",
@@ -44,7 +69,11 @@
       "emailInvalid": "That doesn't look like an email address.",
       "passwordRequired": "Enter a password.",
       "passwordTooShort": "Use at least 8 characters.",
-      "mobileInvalid": "That doesn't look like a mobile number."
+      "mobileInvalid": "That doesn't look like a mobile number.",
+      "codeRequired": "Enter the code from your email.",
+      "codeInvalid": "The code is 6 digits.",
+      "confirmRequired": "Type your new password again.",
+      "passwordMismatch": "Those passwords don't match."
     },
     "signOut": "Sign out",
     "signOutConfirm": "Sign out of ElectroSync?"
@@ -108,7 +137,9 @@
     "editHint": "The customer number, provider and type are fixed after the meter is added.",
     "primary": "Primary",
     "makePrimary": "Make primary",
+    "makePrimaryFailed": "Couldn't change your primary meter",
     "remove": "Remove meter",
+    "removePrimaryHint": "Make another meter primary before removing this one.",
     "removeConfirm": "Remove this meter?",
     "unsupportedTitle": "{{utility}} isn't supported yet",
     "unsupportedBody": "This meter is saved, but we can't fetch {{utility}} data yet.",
@@ -162,7 +193,7 @@
     "editProfile": "Edit your details",
     "emailFixed": "Your email is how you sign in, so it can't be changed here.",
     "verified": "Verified",
-    "profileSaved": "Your details are saved.",
+    "profileSaved": "Your details are saved",
     "appearance": "Appearance",
     "theme": "Theme",
     "themeLight": "Light",
@@ -181,7 +212,11 @@
     "rechargeAlerts": "Recharge alerts",
     "thresholdOther": "Other",
     "thresholdCustom": "Custom amount",
-    "thresholdRange": "Enter a whole amount between {{min}} and {{max}}."
+    "thresholdRange": "Enter a whole amount between {{min}} and {{max}}.",
+    "turnedOn": "{{setting}} turned on",
+    "turnedOff": "{{setting}} turned off",
+    "thresholdSaved": "You'll be alerted below {{amount}}",
+    "saveFailed": "Couldn't save that change"
   },
   "errors": {
     "network": "Can't reach the server. Check your connection.",
@@ -193,7 +228,9 @@
     "server": "Something went wrong on our end.",
     "unknown": "Something went wrong.",
     "invalidCredentials": "Wrong email or password.",
-    "emailTaken": "An account with that email already exists."
+    "emailTaken": "An account with that email already exists.",
+    "invalidResetCode": "That code is wrong or has expired. Request a new one.",
+    "tooManyRequests": "Too many attempts. Please wait a moment and try again."
   },
   "months": {
     "1": "January",

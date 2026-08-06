@@ -38,6 +38,7 @@ export function messageKeyForStatus(status: number): TranslationKey {
   if (status === 403) return 'errors.forbidden';
   if (status === 404) return 'errors.notFound';
   if (status === 409) return 'errors.conflict';
+  if (status === 429) return 'errors.tooManyRequests';
   if (status >= 500) return 'errors.server';
   return 'errors.unknown';
 }

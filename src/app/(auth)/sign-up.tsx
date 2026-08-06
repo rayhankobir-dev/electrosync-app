@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { isApiError } from '@/api/errors';
+import { BrandMark } from '@/components/brand-mark';
 import { LanguageToggle } from '@/components/language-toggle';
 import { Banner } from '@/components/ui/banner';
 import { Button } from '@/components/ui/button';
@@ -81,10 +82,13 @@ export default function SignUpScreen() {
       </View>
 
       <View style={styles.header}>
-        <Text variant="title1">{t('auth.signUp.title')}</Text>
-        <Text variant="callout" color="textSecondary">
-          {t('auth.signUp.subtitle')}
-        </Text>
+        <BrandMark />
+        <View style={styles.headings}>
+          <Text variant="title1">{t('auth.signUp.title')}</Text>
+          <Text variant="callout" color="textSecondary">
+            {t('auth.signUp.subtitle')}
+          </Text>
+        </View>
       </View>
 
       <View style={styles.form}>
@@ -166,9 +170,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   header: {
-    gap: Spacing.xs,
+    // Wider than the gap between the two headings, so the mark reads as its own
+    // element rather than a third line of the title block.
+    gap: Spacing.lg,
+    // Tighter than sign-in's 2xl on both ends: this form carries four fields,
+    // so the header gives up the slack instead of the inputs.
     marginTop: Spacing.xl,
     marginBottom: Spacing.xl,
+  },
+  headings: {
+    gap: Spacing.xs,
   },
   form: {
     gap: Spacing.lg,

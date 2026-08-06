@@ -15,6 +15,7 @@ import { ApiError } from '@/api/errors';
 import type {
   LoginPayload,
   RegisterPayload,
+  ResetPasswordPayload,
   UpdateProfilePayload,
   UserProfile,
 } from '@/api/types';
@@ -34,6 +35,14 @@ export type Session = {
   api: Endpoints;
   signIn(payload: LoginPayload): Promise<void>;
   signUp(payload: RegisterPayload): Promise<void>;
+  /**
+   * Redeems a reset code and adopts the session it returns.
+   *
+   * It belongs here rather than being called straight from the screen for the
+   * same reason `signIn` does: the response is a token that has to be persisted
+   * and reflected in `isAuthenticated`, and that is session state.
+   */
+  resetPassword(payload: ResetPasswordPayload): Promise<void>;
   signOut(): Promise<void>;
   /**
    * Saves the editable parts of the profile and adopts the server's answer as
@@ -159,6 +168,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       },
       signUp: async (payload) => {
         const issued = await api.auth.register(payload);
+        await persistToken(issued.accessToken, issued.expiresIn);
+      },
+      resetPassword: async (payload) => {
+        const issued = await api.auth.resetPassword(payload);
         await persistToken(issued.accessToken, issued.expiresIn);
       },
       updateProfile: async (payload) => {

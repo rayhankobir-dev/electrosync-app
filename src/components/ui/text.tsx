@@ -16,8 +16,8 @@ export type TextProps = RNTextProps & {
   color?: ColorName;
   /**
    * Asks for tabular (equal-advance) digits. Use for balances, meter numbers,
-   * dates — anything read as a column. Honoured in English; inert in Bangla,
-   * where Hind Siliguri ships no `tnum`.
+   * dates — anything read as a column. Inert today: Hind Siliguri ships no
+   * `tnum` in either script. Kept as the marker for columnar data.
    */
   numeric?: boolean;
   align?: "auto" | "left" | "right" | "center";
@@ -42,7 +42,7 @@ export function Text({
           color: colors[color],
           fontSize: scale.size,
           lineHeight: resolveLineHeight(variant, locale),
-          fontFamily: fontFamily(locale, scale.weight),
+          fontFamily: fontFamily(scale.weight),
           textAlign: align,
         },
         numeric && TabularNumbers,

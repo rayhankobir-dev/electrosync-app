@@ -42,6 +42,21 @@ export type LoginPayload = {
   password: string;
 };
 
+export type ForgotPasswordPayload = {
+  email: string;
+};
+
+/**
+ * The server answers this with an `IssuedToken`, exactly as `/auth/login` does —
+ * redeeming a code signs the user in, so there is no separate login step.
+ */
+export type ResetPasswordPayload = {
+  email: string;
+  /** Exactly six digits, and zero-padded — keep it a string. */
+  code: string;
+  password: string;
+};
+
 /** What the meter is for. Presentation only — nothing routes on it. */
 export type MeterType = 'HOME' | 'OFFICE' | 'INDUSTRY';
 

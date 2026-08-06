@@ -20,6 +20,31 @@ export const THRESHOLD_MAX = 100_000;
 const BENGALI_ZERO = 0x09e6;
 
 /**
+ * Rewrites ০-৯ as 0-9, leaving everything else alone.
+ *
+ * Needed wherever a digit string is sent to the backend rather than parsed into
+ * a number: a Bengali keyboard layout produces ০-৯ from a `number-pad`, and the
+ * server validates digits with `\d`, which does not match them.
+ *
+ * Distinct from `parseWholeAmount` because that returns a number, and a number
+ * cannot carry a leading zero — the reset code `০০৪২` has to survive as
+ * `"0042"`, not become `42`.
+ */
+export function toLatinDigits(input: string): string {
+  return input.replace(/[০-৯]/g, (digit) =>
+    String(digit.charCodeAt(0) - BENGALI_ZERO),
+  );
+}
+
+/** Matches `@Matches(/^\d{6}$/)` on the backend's ResetPasswordDto. */
+export const RESET_CODE_LENGTH = 6;
+
+/** Expects digits already normalised by `toLatinDigits`. */
+export function isValidResetCode(value: string): boolean {
+  return new RegExp(`^\\d{${RESET_CODE_LENGTH}}$`).test(value.trim());
+}
+
+/**
  * Parses a whole amount typed in either digit set, or `null` if the text is not
  * one. Bengali digits have to be handled explicitly: `number-pad` yields Latin
  * digits on most systems, but a Bengali keyboard layout gives ০-৯ and

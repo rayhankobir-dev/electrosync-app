@@ -6,6 +6,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
+import { ToastProvider } from "@/components/ui/toast-host";
 import { I18nProvider } from "@/i18n";
 import { SessionProvider, useSession } from "@/session";
 import { FontAssets, ThemeProvider, useTheme } from "@/theme";
@@ -32,9 +33,20 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <I18nProvider>
           <ThemeProvider>
-            <SessionProvider>
-              <RootNavigator />
-            </SessionProvider>
+            {/*
+              Outside `SessionProvider` so the auth screens can toast too, and
+              inside `ThemeProvider`/`SafeAreaProvider` because the toast needs
+              both colours and the top inset.
+
+              Caveat worth knowing: an iOS `Modal` is its own native window, so a
+              toast fired while one is open sits behind it. Every caller closes
+              its modal before toasting, so this does not bite in practice.
+            */}
+            <ToastProvider>
+              <SessionProvider>
+                <RootNavigator />
+              </SessionProvider>
+            </ToastProvider>
           </ThemeProvider>
         </I18nProvider>
       </QueryClientProvider>

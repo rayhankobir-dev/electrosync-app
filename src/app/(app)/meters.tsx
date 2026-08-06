@@ -20,7 +20,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Icon } from "@/components/ui/icon";
 import { Screen } from "@/components/ui/screen";
+import { StarFill } from "@/components/ui/star-fill";
 import { Text } from "@/components/ui/text";
+import { useToast } from "@/components/ui/toast-host";
 import { useMeters, useRemoveMeter, useUpdateMeter } from "@/hooks/use-meters";
 import { useMeterDetails, type MeterDetail } from "@/hooks/use-utility-data";
 import { useI18n } from "@/i18n";
@@ -32,12 +34,31 @@ export default function MetersScreen() {
   const updateMeter = useUpdateMeter();
   const removeMeter = useRemoveMeter();
   const router = useRouter();
+  const toast = useToast();
 
   // The sheet lives above the tab navigator so the bar's action button can open
   // it; this screen only ever asks for the edit variant.
   const meterForm = useMeterForm();
 
   const details = useMeterDetails(meters ?? []);
+
+  /**
+   * No success toast: the star fills the moment the tap lands, which says it
+   * worked without a message on top of it. Failure is the case that needs
+   * words — the optimistic write rolls back, so all the user would otherwise
+   * see is the star quietly un-filling, which reads as a missed tap rather
+   * than a rejected one.
+   */
+  function makePrimary(meter: Meter) {
+    void updateMeter
+      .mutateAsync({ id: meter.id, isPrimary: true })
+      .catch((error: unknown) => {
+        toast.error(
+          t("meters.makePrimaryFailed"),
+          t(isApiError(error) ? error.messageKey : "errors.unknown"),
+        );
+      });
+  }
 
   function confirmRemove(meter: Meter) {
     const remove = () =>
@@ -91,12 +112,19 @@ export default function MetersScreen() {
         renderItem={({ item }) => (
           <MeterCard
             detail={item}
+            /**
+             * The primary meter is protected from removal — promote another one
+             * first. Computed here rather than in the card because it is a fact
+             * about the list, not about the meter.
+             *
+             * The single-meter exemption is the part that matters: a lone meter is
+             * primary by definition, so keying off `isPrimary` alone would leave
+             * an account holding one meter it could never delete, with no other
+             * meter to promote in order to unlock it.
+             */
+            canRemove={!item.meter.isPrimary || details.length === 1}
             onEdit={() => meterForm.edit(item.meter)}
-            onMakePrimary={() =>
-              void updateMeter
-                .mutateAsync({ id: item.meter.id, isPrimary: true })
-                .catch(() => undefined)
-            }
+            onMakePrimary={() => makePrimary(item.meter)}
             onRemove={() => confirmRemove(item.meter)}
             onViewDetails={() => router.push(`/meter/${item.meter.id}`)}
           />
@@ -108,12 +136,14 @@ export default function MetersScreen() {
 
 function MeterCard({
   detail,
+  canRemove,
   onEdit,
   onMakePrimary,
   onRemove,
   onViewDetails,
 }: {
   detail: MeterDetail;
+  canRemove: boolean;
   onEdit(): void;
   onMakePrimary(): void;
   onRemove(): void;
@@ -150,7 +180,24 @@ function MeterCard({
           </View>
 
           <View style={styles.actions}>
-            {!meter.isPrimary ? (
+            {/*
+              Filled versus hollow carries the state: a solid star says this
+              meter already is the primary one, a hollow one is the control that
+              makes it so. Previously the star simply vanished on the primary
+              card, which read as the button having gone missing.
+
+              Not a `Pressable` when filled — there is always exactly one primary
+              meter, so there is nothing a tap could do. Taps fall through to the
+              card's own handler and open it for editing, same as the artwork.
+            */}
+            {meter.isPrimary ? (
+              <View
+                accessibilityRole="image"
+                accessibilityLabel={t("meters.primary")}
+              >
+                <StarFill size={20} />
+              </View>
+            ) : (
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={t("meters.makePrimary")}
@@ -159,15 +206,31 @@ function MeterCard({
               >
                 <Icon icon={StarIcon} size={20} color="textTertiary" />
               </Pressable>
-            ) : null}
+            )}
 
+            {/*
+              Dimmed to `textTertiary` rather than hidden. Removing the icon
+              outright would leave the primary card's action column a different
+              shape from every other card's, and the greyed bin still says the
+              action exists — it is just not available on this meter. The hint
+              carries the reason, since the visual alone cannot.
+            */}
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={t("meters.remove")}
+              accessibilityState={{ disabled: !canRemove }}
+              accessibilityHint={
+                canRemove ? undefined : t("meters.removePrimaryHint")
+              }
               hitSlop={HitSlop / 4}
+              disabled={!canRemove}
               onPress={onRemove}
             >
-              <Icon icon={Delete02Icon} size={20} color="danger" />
+              <Icon
+                icon={Delete02Icon}
+                size={20}
+                color={canRemove ? "danger" : "textTertiary"}
+              />
             </Pressable>
           </View>
         </View>

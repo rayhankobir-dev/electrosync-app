@@ -18,6 +18,7 @@ import { Card, CardPadding } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { TextField } from '@/components/ui/text-field';
+import { useToast } from '@/components/ui/toast-host';
 import { useUpdateProfile } from '@/hooks/use-profile';
 import { useI18n, type TranslationKey } from '@/i18n';
 import { isValidMobile } from '@/lib/validation';
@@ -49,6 +50,7 @@ const TIMING = { duration: 220, easing: Easing.out(Easing.cubic) } as const;
 export function AccountCard({ user }: { user: UserProfile }) {
   const { t } = useI18n();
   const { colors } = useTheme();
+  const toast = useToast();
   const updateProfile = useUpdateProfile();
 
   const [expanded, setExpanded] = useState(false);
@@ -60,7 +62,6 @@ export function AccountCard({ user }: { user: UserProfile }) {
   const [nameError, setNameError] = useState<string | null>(null);
   const [mobileError, setMobileError] = useState<string | null>(null);
   const [formError, setFormError] = useState<TranslationKey | null>(null);
-  const [saved, setSaved] = useState(false);
 
   /**
    * The body's natural height, from the last time it measured itself. State
@@ -120,7 +121,6 @@ export function AccountCard({ user }: { user: UserProfile }) {
     setNameError(null);
     setMobileError(null);
     setFormError(null);
-    setSaved(false);
 
     setMounted(true);
     setExpanded(true);
@@ -128,7 +128,6 @@ export function AccountCard({ user }: { user: UserProfile }) {
 
   async function handleSave() {
     setFormError(null);
-    setSaved(false);
 
     if (!trimmedName) {
       setNameError(t('auth.validation.nameRequired'));
@@ -150,7 +149,17 @@ export function AccountCard({ user }: { user: UserProfile }) {
         ...(trimmedName !== user.name ? { name: trimmedName } : {}),
         ...(trimmedMobile !== storedMobile ? { mobile: trimmedMobile } : {}),
       });
-      setSaved(true);
+
+      /**
+       * Collapsing is part of the confirmation, not a separate flourish. The
+       * success message used to sit inside this panel, right beside the Save
+       * button the user was already looking at; a toast appears at the top of the
+       * screen instead, which an expanded form can push well out of view. The
+       * panel closing is the feedback that lands where the eye already is, and
+       * the toast names what happened.
+       */
+      setExpanded(false);
+      toast.success(t("settings.profileSaved"));
     } catch (error) {
       setFormError(isApiError(error) ? error.messageKey : 'errors.unknown');
     }
@@ -208,10 +217,7 @@ export function AccountCard({ user }: { user: UserProfile }) {
               required
               placeholder={t('auth.fields.namePlaceholder')}
               value={name}
-              onChangeText={(next) => {
-                setName(next);
-                setSaved(false);
-              }}
+              onChangeText={setName}
               error={nameError}
               autoCapitalize="words"
               maxLength={255}
@@ -241,17 +247,16 @@ export function AccountCard({ user }: { user: UserProfile }) {
               label={t('auth.fields.mobile')}
               placeholder={t('auth.fields.mobilePlaceholder')}
               value={mobile}
-              onChangeText={(next) => {
-                setMobile(next);
-                setSaved(false);
-              }}
+              onChangeText={setMobile}
               error={mobileError}
               keyboardType="phone-pad"
               maxLength={32}
             />
 
+            {/* Errors stay inline. A validation failure belongs next to the
+                fields it is about and has to persist while they are corrected —
+                which is exactly what a toast cannot do. */}
             {formError ? <Banner message={t(formError)} /> : null}
-            {saved ? <Banner tone="success" message={t('settings.profileSaved')} /> : null}
 
             {/* Side by side, not stacked: two full-width blocks inside a card
                 turn a short form into a wall of buttons. */}

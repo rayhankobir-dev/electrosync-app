@@ -78,6 +78,24 @@ export type ColorName = keyof Colors;
 
 export const Palette = palette;
 
+/**
+ * A palette colour at reduced opacity.
+ *
+ * For washes and hairlines that should read as the same hue without competing
+ * with it — a tinted card's border, where the full-strength tone outlines the
+ * card too loudly but a neutral grey makes it look unrelated to its own fill.
+ *
+ * Works by appending the alpha byte: every value in the palette is 6-digit hex,
+ * and React Native accepts `#RRGGBBAA`. Note the result blends with whatever is
+ * *behind* it, which for a border is the view's own `backgroundColor` — so
+ * tinting a tone against its own soft fill lands on a deeper shade of the same
+ * family rather than on a washed-out grey.
+ */
+export function withAlpha(color: string, alpha: number): string {
+  const byte = Math.round(Math.min(Math.max(alpha, 0), 1) * 255);
+  return `${color}${byte.toString(16).padStart(2, '0')}`;
+}
+
 /** 4pt grid. Named by step so intent survives a redesign of the values. */
 export const Spacing = {
   xs: 4,
@@ -133,7 +151,7 @@ export type FontWeight = (typeof TypeScale)[TypeVariant]['weight'];
 /**
  * Bengali needs more vertical room than Latin at the same point size.
  * Above-base vowel signs (ি, ী, ৈ, ৗ) and the reph ascend far past Latin
- * cap-height, so a line height tuned for Inter clips them — and a clipped ি
+ * cap-height, so a line height sized for Latin crops them — and a clipped ি
  * reads as a different mark, which looks like broken shaping rather than
  * cropping.
  *
@@ -143,9 +161,11 @@ export type FontWeight = (typeof TypeScale)[TypeVariant]['weight'];
  * `lineHeight` as a hard limit, so any value below it crops the glyph rather
  * than tightening the leading. Rounded up to 1.62 to stay clear of it.
  *
- * Keyed to the font, so it has to move if the Bangla face ever does: a family
- * with a shorter box would leave every Bangla line padded with leading its
- * glyphs never asked for, and a taller one would crop.
+ * Applied per script rather than per font, even though one family now sets
+ * both: no Latin glyph in it reaches past 1.5em, so English lines stay on the
+ * tighter rhythm of `TypeScale` instead of carrying leading only the Bengali
+ * marks ever asked for. The number itself is still the family's, so it has to
+ * move if the family ever does.
  */
 const BENGALI_LINE_HEIGHT_RATIO = 1.62;
 
