@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "962783734707",
+    "project_id": "theater-app-82ac1",
+    "storage_bucket": "theater-app-82ac1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:962783734707:android:9491c6ea3b7cf4330cf9c6",
+        "android_client_info": {
+          "package_name": "net.mohajon.electrosync"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA4mqh5P0MT61gWDP2RU-HjSFBUfI3Mdq4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
