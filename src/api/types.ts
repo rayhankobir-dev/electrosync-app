@@ -171,6 +171,38 @@ export type UserSettings = {
   lowBalanceAlerts: boolean;
   lowBalanceThreshold: number;
   rechargeAlerts: boolean;
+  /** Alert when a day's usage jumps well above the meter's recent normal. */
+  usageAnomalyAlerts: boolean;
+  /**
+   * How far above the trailing 14-day baseline a day has to land to count as
+   * an anomaly, as a **percentage** — 40 means "40% above normal", not 40x.
+   *
+   * A percentage rather than a taka amount, unlike `lowBalanceThreshold`,
+   * because the meaningful quantity is relative: ৳30 over normal is noise on an
+   * industrial connection and a doubling on a one-room flat.
+   */
+  usageAnomalyThreshold: number;
+  /**
+   * Extra channels an alert is delivered on, on top of the push notification.
+   * All three default to off server-side — push is the channel installing the
+   * app already consented to, a message to a handset or inbox is a separate ask.
+   */
+  whatsappAlerts: boolean;
+  smsAlerts: boolean;
+  emailAlerts: boolean;
+  /**
+   * Where those two go, when it is not the account's own number.
+   *
+   * Null is the normal state, not a missing value: it means "use the mobile on
+   * the profile". A string is an override the user typed because the profile has
+   * no number to fall back to, or because the alert should reach a different
+   * handset from the one they sign in with. Sending null clears the override.
+   *
+   * Email has no counterpart — it is the login identity, so there is always one
+   * address and it is always the right one.
+   */
+  whatsappNumber: string | null;
+  smsNumber: string | null;
   language: 'en' | 'bn';
   theme: 'light' | 'dark' | 'system';
 };

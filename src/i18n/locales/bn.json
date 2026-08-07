@@ -81,6 +81,7 @@
   "home": {
     "greeting": "হ্যালো, {{name}}",
     "balance": "বর্তমান ব্যালেন্স",
+    "quickActions": "দ্রুত অ্যাকশন",
     "noMeterTitle": "কোনো মিটার নেই",
     "noMeterBody": "ব্যালেন্স দেখতে আপনার প্রিপেইড মিটার যোগ করুন।",
     "lastUpdated": "এইমাত্র হালনাগাদ",
@@ -95,7 +96,22 @@
     "address": "ঠিকানা",
     "feeder": "ফিডার",
     "meterType": "মিটারের ধরন",
-    "installedAt": "স্থাপনের তারিখ"
+    "installedAt": "স্থাপনের তারিখ",
+    "yesterday": "গতকাল",
+    "lastRecharge": "শেষ রিচার্জ",
+    "rechargeToday": "আজ",
+    "rechargeYesterday": "গতকাল",
+    "rechargeDaysAgo": "{{days}} দিন আগে",
+    "rechargeNone": "এখনো হয়নি",
+    "notMeasured": "হিসাব হয়নি",
+    "supplyOkTitle": "কোনো সমস্যা নেই",
+    "supplyOkBody": "আপনার বিদ্যুৎ চালু আছে।",
+    "supplyLowTitle": "ব্যালেন্স কমে আসছে",
+    "supplyLowBody": "সংযোগ বন্ধ হওয়ার আগেই রিচার্জ করে নিন।",
+    "supplyOutTitle": "ব্যালেন্স শেষ",
+    "supplyOutBody": "এখনই রিচার্জ করুন — যেকোনো সময় বিদ্যুৎ বন্ধ হয়ে যেতে পারে।",
+    "customerNoCopied": "কাস্টমার নম্বর কপি হয়েছে",
+    "copy": "কাস্টমার নম্বর কপি করুন"
   },
   "analytics": {
     "trendTitle": "এই সপ্তাহ",
@@ -103,8 +119,6 @@
     "rhythmSubtitle": "দৈনিক গড় খরচ, শেষ {{days}} দিন",
     "vsLastWeek": "গত সপ্তাহের তুলনায়",
     "partialNote": "ড্যাশ চিহ্নিত দিনগুলোর পূর্ণ তথ্য নেই",
-    "emptyTitle": "এখনও কোনো তথ্য নেই",
-    "emptyBody": "প্রথম হিসাব দেখাতে মিটারটি দুইবার যাচাই হতে হবে — সাধারণত একদিনের মধ্যেই।",
     "rhythmLocked": "{{days}} দিনের তথ্য জমা হলে আপনার সাপ্তাহিক ধরন দেখা যাবে।",
     "loadFailed": "ব্যবহারের তথ্য আনা যায়নি।",
     "weekday": {
@@ -119,6 +133,7 @@
   },
   "meters": {
     "title": "মিটার",
+    "mine": "আমার মিটার",
     "add": "মিটার যোগ করুন",
     "addTitle": "নতুন মিটার",
     "editTitle": "আপডেট মিটার",
@@ -185,7 +200,24 @@
     "justNow": "এইমাত্র",
     "minutesAgo": "{{count}} মিনিট আগে",
     "hoursAgo": "{{count}} ঘণ্টা আগে",
-    "daysAgo": "{{count}} দিন আগে"
+    "daysAgo": "{{count}} দিন আগে",
+    "filterAll": "সব",
+    "filterUnread": "অপঠিত",
+    "kinds": {
+      "lowBalance": "কম ব্যালেন্স",
+      "depleted": "ব্যালেন্স শেষ",
+      "recharged": "রিচার্জ",
+      "unusualUsage": "অস্বাভাবিক ব্যবহার"
+    },
+    "markAllRead": "সব পঠিত করুন",
+    "markAllReadFailed": "পঠিত করা যায়নি",
+    "clearAll": "সব মুছুন",
+    "clearAllConfirm": "সব নোটিফিকেশন মুছে ফেলবেন?",
+    "clearAllBody": "এগুলো এই তালিকা থেকে সরে যাবে। আর কিছু বদলাবে না।",
+    "clearAllFailed": "নোটিফিকেশন মোছা যায়নি",
+    "noMatchesTitle": "কিছু মেলেনি",
+    "noMatchesBody": "আপনার বেছে নেওয়া ফিল্টারে কোনো নোটিফিকেশন নেই।",
+    "clearFilter": "ফিল্টার মুছুন"
   },
   "settings": {
     "title": "সেটিংস",
@@ -210,13 +242,28 @@
     "lowBalanceAlerts": "কম ব্যালেন্স সতর্কতা",
     "lowBalanceThreshold": "এর নিচে সতর্ক করুন",
     "rechargeAlerts": "রিচার্জ সতর্কতা",
+    "usageAnomalyAlerts": "অস্বাভাবিক ব্যবহারের সতর্কতা",
+    "usageAnomalyHint": "গত দুই সপ্তাহে এই মিটারের নিজের গড়ের সঙ্গে প্রতিদিনের ব্যবহার তুলনা করা হয়।",
+    "usageAnomalyThreshold": "কত শতাংশ বেশি হলে জানাব",
+    "usageAnomalySaved": "স্বাভাবিকের চেয়ে {{percent}}% বেশি হলে জানানো হবে।",
     "thresholdOther": "অন্য",
     "thresholdCustom": "নিজের পরিমাণ",
     "thresholdRange": "{{min}} থেকে {{max}} এর মধ্যে একটি পূর্ণ সংখ্যা লিখুন।",
     "turnedOn": "{{setting}} চালু হয়েছে",
     "turnedOff": "{{setting}} বন্ধ হয়েছে",
     "thresholdSaved": "{{amount}} এর নিচে নামলে জানানো হবে",
-    "saveFailed": "পরিবর্তনটি সংরক্ষণ করা যায়নি"
+    "saveFailed": "পরিবর্তনটি সংরক্ষণ করা যায়নি",
+    "alertChannels": "অ্যালার্ট চ্যানেল",
+    "alertChannelsHint": "অ্যাপের নোটিফিকেশনের পাশাপাশি ব্যালেন্স কম বা রিচার্জের অ্যালার্ট কোথায় পাবেন।",
+    "whatsappAlerts": "হোয়াটসঅ্যাপ",
+    "smsAlerts": "এসএমএস",
+    "emailAlerts": "ইমেইল",
+    "channelNumber": "অ্যালার্টের নম্বর",
+    "channelNumberHint": "এই নম্বরে অ্যালার্ট পাঠানো হবে।",
+    "channelNumberInvalid": "সঠিক ফোন নম্বর দিন।",
+    "channelUsingProfile": "{{contact}} নম্বরে পাঠানো হবে",
+    "channelNumberSaved": "{{contact}} নম্বরে অ্যালার্ট যাবে",
+    "channelNeedsNumber": "অ্যালার্ট পেতে একটি নম্বর দিন।"
   },
   "errors": {
     "network": "সার্ভারে সংযোগ করা যাচ্ছে না। ইন্টারনেট সংযোগ দেখুন।",
@@ -231,6 +278,23 @@
     "emailTaken": "এই ইমেইলে ইতিমধ্যে একটি অ্যাকাউন্ট আছে।",
     "invalidResetCode": "কোডটি ভুল বা বাতিল হয়ে গেছে। নতুন কোড নিন।",
     "tooManyRequests": "অনেকবার চেষ্টা হয়েছে। কিছুক্ষণ পরে আবার চেষ্টা করুন।"
+  },
+  "wallet": {
+    "title": "ওয়ালেট",
+    "rechargeHint": "মোবাইল ওয়ালেট থেকে রিচার্জ করুন",
+    "methodCaption": "মোবাইল ওয়ালেট থেকে রিচার্জ করুন",
+    "openApp": "খুলুন",
+    "openAppA11y": "{{method}} খুলুন",
+    "openFailed": "{{method}} বা এর স্টোর পেজ খোলা যায়নি।",
+    "methods": {
+      "bkash": "বিকাশ",
+      "nagad": "নগদ"
+    }
+  },
+  "providers": {
+    "NESCO": "নেসকো",
+    "DESCO": "ডেসকো",
+    "DPDC": "ডিপিডিসি"
   },
   "months": {
     "1": "জানুয়ারি",

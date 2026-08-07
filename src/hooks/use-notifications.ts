@@ -67,3 +67,64 @@ export function useMarkNotificationRead() {
     onSettled: () => queryClient.invalidateQueries({ queryKey: notificationKeys.all }),
   });
 }
+
+/**
+ * One request, not one per row. Marking twenty notifications read by firing
+ * twenty `PATCH`es would also give twenty chances to half-fail and leave the
+ * list in a state no single rollback could undo.
+ */
+export function useMarkAllNotificationsRead() {
+  const api = useApi();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => api.notifications.markAllAsRead(),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: notificationKeys.all });
+      const previous = queryClient.getQueryData<Notification[]>(notificationKeys.all);
+
+      const now = new Date().toISOString();
+      queryClient.setQueryData<Notification[]>(notificationKeys.all, (current) =>
+        (current ?? []).map((item) =>
+          item.readAt === null ? { ...item, readAt: now } : item,
+        ),
+      );
+
+      return { previous };
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(notificationKeys.all, context.previous);
+      }
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: notificationKeys.all }),
+  });
+}
+
+/**
+ * Empties the list. Optimistic like the others, and for the same reason the
+ * rollback matters more here: the user is watching every row disappear at once,
+ * so a silent failure would look like the data was destroyed.
+ */
+export function useClearNotifications() {
+  const api = useApi();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => api.notifications.clearAll(),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: notificationKeys.all });
+      const previous = queryClient.getQueryData<Notification[]>(notificationKeys.all);
+
+      queryClient.setQueryData<Notification[]>(notificationKeys.all, []);
+
+      return { previous };
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(notificationKeys.all, context.previous);
+      }
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: notificationKeys.all }),
+  });
+}

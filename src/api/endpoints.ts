@@ -103,6 +103,17 @@ export function createEndpoints(client: ApiClient) {
       markAsRead: (id: string) =>
         client.request<Notification>(`/notifications/${id}/read`, { method: 'PATCH' }),
 
+      markAllAsRead: () =>
+        client.request<{ updated: number }>('/notifications/read-all', { method: 'PATCH' }),
+
+      /**
+       * Empties the list. The server archives rather than deletes, so the rows
+       * are still reachable with `includeArchived` — nothing here surfaces that
+       * yet, but the action is recoverable rather than destructive.
+       */
+      clearAll: () =>
+        client.request<{ archived: number }>('/notifications', { method: 'DELETE' }),
+
       registerToken: (payload: RegisterDeviceTokenPayload) =>
         client.request<void>('/notifications/tokens', { method: 'POST', body: payload }),
 

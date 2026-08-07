@@ -167,7 +167,7 @@ export type FontWeight = (typeof TypeScale)[TypeVariant]["weight"];
  * marks ever asked for. The number itself is still the family's, so it has to
  * move if the family ever does.
  */
-const BENGALI_LINE_HEIGHT_RATIO = 1.62;
+const BENGALI_LINE_HEIGHT_RATIO = 1.05;
 
 /**
  * Line height for a variant in a given locale. Never returns less than the
@@ -179,15 +179,6 @@ export function resolveLineHeight(
 ): number {
   const { size, lineHeight } = TypeScale[variant];
   if (locale !== "bn") return lineHeight;
-
-  /**
-   * `ceil`, not `round`. Rounding to nearest lands *under* the font's line box
-   * at several sizes in this scale — `callout` at 15pt needs 24.25px and rounds
-   * to 24, `caption` at 12pt needs 19.40 and rounds to 19, `micro` at 10pt
-   * needs 16.17 and rounds to 16 — and a fraction of a pixel is enough to shave
-   * the top row off a ী or a reph. Rounding up costs at most a pixel of leading
-   * and can never crop.
-   */
   return Math.max(lineHeight, Math.ceil(size * BENGALI_LINE_HEIGHT_RATIO));
 }
 

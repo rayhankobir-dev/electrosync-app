@@ -42,20 +42,16 @@ export function UsageTrendCard({ meterId }: { meterId?: string }) {
     );
   }
 
-  // An empty series and a series of zeroes mean different things: the first is
-  // "we have not measured yet", the second is "you used nothing". Only the
-  // first justifies replacing the chart with an explanation.
-  if (points.length === 0) {
-    return (
-      <Card>
-        <Text variant="title3">{t("analytics.emptyTitle")}</Text>
-        <Text variant="footnote" color="textSecondary" style={styles.emptyBody}>
-          {t("analytics.emptyBody")}
-        </Text>
-      </Card>
-    );
-  }
+  /*
+    No empty state. `useUsageTrend` pads the window to a full seven days, so an
+    account with nothing recorded yet gets a flat line at zero and a ৳0 headline
+    rather than a card explaining that there is no data — which is what "no data"
+    looks like anyway, said twice.
 
+    The distinction between "spent nothing" and "not measured" is not lost: the
+    padded days carry `coverage: 0`, so they draw hollow and dashed, and the note
+    under the chart says so.
+  */
   const chartPoints = points.map(
     (point): LinePoint => ({
       label: weekdayLabel(point, t),
@@ -139,7 +135,6 @@ function formatMoney(value: number, locale: string): string {
 const styles = StyleSheet.create({
   placeholder: { height: 132, justifyContent: "center" },
   gap: { marginTop: Spacing.sm },
-  emptyBody: { marginTop: Spacing.xs },
   headline: {
     flexDirection: "row",
     alignItems: "baseline",

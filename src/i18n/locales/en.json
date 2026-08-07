@@ -81,6 +81,7 @@
   "home": {
     "greeting": "Hello, {{name}}",
     "balance": "Current balance",
+    "quickActions": "Quick actions",
     "noMeterTitle": "No meter yet",
     "noMeterBody": "Add your prepaid meter to see its balance here.",
     "lastUpdated": "Updated just now",
@@ -95,7 +96,22 @@
     "address": "Address",
     "feeder": "Feeder",
     "meterType": "Meter type",
-    "installedAt": "Installed"
+    "installedAt": "Installed",
+    "yesterday": "Yesterday",
+    "lastRecharge": "Last recharge",
+    "rechargeToday": "Today",
+    "rechargeYesterday": "Yesterday",
+    "rechargeDaysAgo": "{{days}} days ago",
+    "rechargeNone": "None yet",
+    "notMeasured": "Not measured",
+    "supplyOkTitle": "No issues",
+    "supplyOkBody": "Your electricity is on.",
+    "supplyLowTitle": "Balance running low",
+    "supplyLowBody": "Recharge soon to keep the supply from cutting out.",
+    "supplyOutTitle": "Balance finished",
+    "supplyOutBody": "Recharge now — the supply can be cut off at any moment.",
+    "customerNoCopied": "Customer number copied",
+    "copy": "Copy customer number"
   },
   "analytics": {
     "trendTitle": "This week",
@@ -103,8 +119,6 @@
     "rhythmSubtitle": "Average daily cost, last {{days}} days",
     "vsLastWeek": "vs last week",
     "partialNote": "Dashed points are days with incomplete readings",
-    "emptyTitle": "No usage data yet",
-    "emptyBody": "Your meter has to be checked twice before the first reading appears — usually within a day.",
     "rhythmLocked": "Your weekly pattern appears once there are {{days}} days of readings.",
     "loadFailed": "Could not load usage data.",
     "weekday": {
@@ -119,6 +133,7 @@
   },
   "meters": {
     "title": "Meters",
+    "mine": "My meters",
     "add": "Add meter",
     "addTitle": "Add a meter",
     "editTitle": "Edit meter",
@@ -185,7 +200,24 @@
     "justNow": "Just now",
     "minutesAgo": "{{count}}m ago",
     "hoursAgo": "{{count}}h ago",
-    "daysAgo": "{{count}}d ago"
+    "daysAgo": "{{count}}d ago",
+    "filterAll": "All",
+    "filterUnread": "Unread",
+    "kinds": {
+      "lowBalance": "Low balance",
+      "depleted": "Depleted",
+      "recharged": "Recharged",
+      "unusualUsage": "Unusual usage"
+    },
+    "markAllRead": "Mark all read",
+    "markAllReadFailed": "Couldn't mark them read",
+    "clearAll": "Clear all",
+    "clearAllConfirm": "Clear all notifications?",
+    "clearAllBody": "They'll be removed from this list. Nothing else changes.",
+    "clearAllFailed": "Couldn't clear your notifications",
+    "noMatchesTitle": "Nothing matches",
+    "noMatchesBody": "No notifications fit the filters you've picked.",
+    "clearFilter": "Clear filters"
   },
   "settings": {
     "title": "Settings",
@@ -210,13 +242,28 @@
     "lowBalanceAlerts": "Low balance alerts",
     "lowBalanceThreshold": "Alert me below",
     "rechargeAlerts": "Recharge alerts",
+    "usageAnomalyAlerts": "Unusual usage alerts",
+    "usageAnomalyHint": "Compares each day against this meter's own average over the last two weeks.",
+    "usageAnomalyThreshold": "Tell me when a day rises by",
+    "usageAnomalySaved": "You'll hear about days {{percent}}% above normal.",
     "thresholdOther": "Other",
     "thresholdCustom": "Custom amount",
     "thresholdRange": "Enter a whole amount between {{min}} and {{max}}.",
     "turnedOn": "{{setting}} turned on",
     "turnedOff": "{{setting}} turned off",
     "thresholdSaved": "You'll be alerted below {{amount}}",
-    "saveFailed": "Couldn't save that change"
+    "saveFailed": "Couldn't save that change",
+    "alertChannels": "Alert channels",
+    "alertChannelsHint": "Where a low balance or recharge alert reaches you, on top of the in-app notification.",
+    "whatsappAlerts": "WhatsApp",
+    "smsAlerts": "SMS",
+    "emailAlerts": "Email",
+    "channelNumber": "Number for alerts",
+    "channelNumberHint": "We'll send alerts to this number.",
+    "channelNumberInvalid": "Enter a valid phone number.",
+    "channelUsingProfile": "Sending to {{contact}}",
+    "channelNumberSaved": "Alerts will go to {{contact}}",
+    "channelNeedsNumber": "Add a number to start receiving these."
   },
   "errors": {
     "network": "Can't reach the server. Check your connection.",
@@ -231,6 +278,23 @@
     "emailTaken": "An account with that email already exists.",
     "invalidResetCode": "That code is wrong or has expired. Request a new one.",
     "tooManyRequests": "Too many attempts. Please wait a moment and try again."
+  },
+  "wallet": {
+    "title": "Wallet",
+    "rechargeHint": "Recharge from your mobile wallet",
+    "methodCaption": "Mobile wallet",
+    "openApp": "Open",
+    "openAppA11y": "Open {{method}}",
+    "openFailed": "Couldn't open {{method}} or its store page.",
+    "methods": {
+      "bkash": "bKash",
+      "nagad": "Nagad"
+    }
+  },
+  "providers": {
+    "NESCO": "NESCO",
+    "DESCO": "DESCO",
+    "DPDC": "DPDC"
   },
   "months": {
     "1": "January",

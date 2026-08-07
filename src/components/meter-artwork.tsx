@@ -1,3 +1,5 @@
+import { FactoryIcon, Home01Icon, OfficeIcon } from '@hugeicons/core-free-icons';
+import type { IconSvgElement } from '@hugeicons/react-native';
 import { Image, type ImageSource } from 'expo-image';
 import { StyleSheet, View } from 'react-native';
 
@@ -30,6 +32,18 @@ export const MeterTypeLabelKey: Record<MeterType, TranslationKey> = {
   HOME: 'meters.typeHome',
   OFFICE: 'meters.typeOffice',
   INDUSTRY: 'meters.typeIndustry',
+};
+
+/**
+ * Line-art counterpart to `ART`, for the places a type has to be named in a
+ * strip too small for the painted tile — the ribbon on a meter card. Kept in the
+ * same `Record` shape and for the same reason: a new meter type is a type error
+ * until it has a picture, a name, and a glyph.
+ */
+export const MeterTypeIcon: Record<MeterType, IconSvgElement> = {
+  HOME: Home01Icon,
+  OFFICE: OfficeIcon,
+  INDUSTRY: FactoryIcon,
 };
 
 export function MeterArtwork({

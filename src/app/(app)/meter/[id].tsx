@@ -43,8 +43,24 @@ import { utilityFor } from "@/utility";
 
 type Tab = "recharges" | "consumption" | "info";
 
+const TABS: readonly Tab[] = ["recharges", "consumption", "info"];
+
+function isTab(value: unknown): value is Tab {
+  return typeof value === "string" && (TABS as readonly string[]).includes(value);
+}
+
 export default function MeterDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  /**
+   * `tab` lets a caller open this screen on a section other than the first —
+   * the home screen's quick actions land straight on recharges, consumption or
+   * info. Validated rather than cast: it arrives from a URL, so it is a string
+   * from outside the app's control and an unrecognised one has to fall back
+   * instead of leaving `Tabs` with a value none of its options match.
+   */
+  const { id, tab: requestedTab } = useLocalSearchParams<{
+    id: string;
+    tab?: string;
+  }>();
   const router = useRouter();
   const { t } = useI18n();
   const { colors } = useTheme();
@@ -52,7 +68,11 @@ export default function MeterDetailScreen() {
   const { data: meters } = useMeters();
   const meter = meters?.find((m) => m.id === id) ?? null;
 
-  const [tab, setTab] = useState<Tab>("recharges");
+  // Initial state only. Once the screen is open the segmented control owns the
+  // value, so re-reading the param would fight the user's own taps.
+  const [tab, setTab] = useState<Tab>(
+    isTab(requestedTab) ? requestedTab : "recharges",
+  );
 
   const info = useCustomerInfo(meter);
   const recharges = useRecharges(meter);
@@ -129,7 +149,7 @@ export default function MeterDetailScreen() {
         <Banner
           tone="info"
           message={t("meters.unsupportedBody", {
-            utility: utility.displayName,
+            utility: t(utility.nameKey),
           })}
         />
       ) : (

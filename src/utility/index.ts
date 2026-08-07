@@ -1,6 +1,7 @@
 import type { ImageSource } from "expo-image";
 
 import type { Endpoints } from "@/api/endpoints";
+import type { TranslationKey } from "@/i18n";
 import type {
   MeterProvider,
   NescoCustomerInfo,
@@ -42,7 +43,13 @@ type Fetchers = {
  */
 type Identity = {
   provider: MeterProvider;
-  displayName: string;
+  /**
+   * The provider's name to show a user. A key rather than a string because the
+   * acronyms are transliterated in Bengali — নেসকো, not NESCO — so the name has
+   * to come out of the catalogue like any other piece of copy. Call sites read
+   * it with `t()`.
+   */
+  nameKey: TranslationKey;
   /**
    * Brand wordmark, transparent background. Always render it on a light tile:
    * both marks are dark blue and would all but vanish against a dark theme, and
@@ -57,7 +64,7 @@ export type UtilityAdapter =
 
 const NESCO: UtilityAdapter = {
   provider: "NESCO",
-  displayName: "NESCO",
+  nameKey: "providers.NESCO",
   logo: require("@/assets/images/meter/nesco.png") as ImageSource,
   supported: true,
   fetchInfo: (api, customerNo) => api.nesco.info(customerNo),
@@ -67,14 +74,14 @@ const NESCO: UtilityAdapter = {
 
 const DESCO: UtilityAdapter = {
   provider: "DESCO",
-  displayName: "DESCO",
+  nameKey: "providers.DESCO",
   logo: require("@/assets/images/meter/desco.png") as ImageSource,
   supported: false,
 };
 
 const DPDC: UtilityAdapter = {
   provider: "DPDC",
-  displayName: "DPDC",
+  nameKey: "providers.DPDC",
   logo: require("@/assets/images/meter/dpdc.png") as ImageSource,
   supported: false,
 };

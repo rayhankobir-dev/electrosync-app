@@ -14,10 +14,10 @@ import { Spacing } from "@/theme";
 /**
  * Mean cost per weekday over the last four weeks.
  *
- * Renders nothing at all until there is enough history — deliberately, rather
- * than showing an empty or locked card. A weekly pattern is the kind of claim
- * that looks equally convincing whether or not the data supports it, so the
- * honest default is silence until it does.
+ * A week with nothing recorded draws the empty web — seven spokes, no shape —
+ * rather than disappearing. The card vanishing entirely was indistinguishable
+ * from the screen having failed to load it, and an account that has genuinely
+ * spent nothing is entitled to see that stated rather than inferred from a gap.
  */
 export function WeeklyRhythmCard({ meterId }: { meterId?: string }) {
   const { t } = useI18n();
@@ -40,8 +40,6 @@ export function WeeklyRhythmCard({ meterId }: { meterId?: string }) {
       value: byWeekday.get(isoDay) ?? 0,
     };
   });
-
-  if (radarPoints.every((point) => point.value === 0)) return null;
 
   return (
     <Card>

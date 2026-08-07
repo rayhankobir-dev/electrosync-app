@@ -38,9 +38,15 @@ export function RadarChart({ points }: { points: RadarPoint[] }) {
   const radius = center - LABEL_INSET;
   const max = Math.max(...points.map((point) => point.value), 0);
 
-  // Every spoke at zero would collapse the polygon onto the centre point,
-  // which reads as a rendering failure rather than as an idle week.
-  const scale = max > 0 ? radius / max : 0;
+  /**
+   * Every spoke at zero collapses the polygon onto the centre point, which
+   * reads as a rendering failure rather than as an idle week. So the shape is
+   * dropped and the web is drawn on its own — rings, spokes and labels, with
+   * nothing plotted on them. An empty grid is a recognisable "nothing here";
+   * a dot at the origin is not.
+   */
+  const hasShape = max > 0;
+  const scale = hasShape ? radius / max : 0;
 
   const vertex = (index: number, distance: number) => {
     // Starts at twelve o'clock and runs clockwise, so the first label sits
@@ -98,27 +104,25 @@ export function RadarChart({ points }: { points: RadarPoint[] }) {
             );
           })}
 
-          <Polygon
-            points={polygon}
-            fill={colors.primary}
-            fillOpacity={0.18}
-            stroke={colors.primary}
-            strokeWidth={2}
-            strokeLinejoin="round"
-          />
-
-          {points.map((point, index) => {
-            const { x, y } = vertex(index, point.value * scale);
-            return (
-              <Circle
-                key={index}
-                cx={x}
-                cy={y}
-                r={3}
+          {hasShape ? (
+            <>
+              <Polygon
+                points={polygon}
                 fill={colors.primary}
+                fillOpacity={0.18}
+                stroke={colors.primary}
+                strokeWidth={2}
+                strokeLinejoin="round"
               />
-            );
-          })}
+
+              {points.map((point, index) => {
+                const { x, y } = vertex(index, point.value * scale);
+                return (
+                  <Circle key={index} cx={x} cy={y} r={3} fill={colors.primary} />
+                );
+              })}
+            </>
+          ) : null}
         </Svg>
 
         {points.map((point, index) => {

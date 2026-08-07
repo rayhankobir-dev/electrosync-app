@@ -101,7 +101,7 @@ function ProviderCard({
     <AnimatedPressable
       accessibilityRole="radio"
       accessibilityState={{ selected }}
-      accessibilityLabel={utility.displayName}
+      accessibilityLabel={t(utility.nameKey)}
       onPress={onPress}
       onPressIn={onPressIn}
       onPressOut={onPressOut}
@@ -147,7 +147,7 @@ function ProviderCard({
         color={selected ? "primary" : "text"}
         numberOfLines={1}
       >
-        {utility.displayName}
+        {t(utility.nameKey)}
       </Text>
     </AnimatedPressable>
   );

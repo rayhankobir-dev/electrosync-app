@@ -102,7 +102,7 @@ export function MeterForm({
                   </Text>
                   <View style={styles.identityBadges}>
                     <Badge
-                      label={utilityFor(meter.provider).displayName}
+                      label={t(utilityFor(meter.provider).nameKey)}
                       tone={utilityFor(meter.provider).supported ? 'neutral' : 'warning'}
                     />
                     <Badge label={t(MeterTypeLabelKey[meter.type])} />
@@ -122,7 +122,7 @@ export function MeterForm({
                   <Banner
                     tone="info"
                     message={t('meters.unsupportedBody', {
-                      utility: utilityFor(provider).displayName,
+                      utility: t(utilityFor(provider).nameKey),
                     })}
                   />
                 ) : null}

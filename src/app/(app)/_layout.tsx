@@ -3,6 +3,7 @@ import {
   Home01Icon,
   PlusSignIcon,
   Settings01Icon,
+  Wallet01Icon,
 } from "@hugeicons/core-free-icons";
 import { Tabs } from "expo-router";
 import { StyleSheet, View } from "react-native";
@@ -16,9 +17,9 @@ import { useSettingsSync } from "@/settings/use-settings-sync";
 
 /**
  * Standard `Tabs` rather than the starter's `NativeTabs`: native tabs take
- * bitmap icons, and the icon set here is SVG. Notifications joins this bar in a
- * later slice — `AppTabBar` splits whatever tabs it is handed around the centre
- * action button, so a fourth tab needs no layout change here.
+ * bitmap icons, and the icon set here is SVG. `AppTabBar` splits whatever tabs
+ * it is handed around the centre action button, so adding one needs no layout
+ * change here.
  */
 export default function AppLayout() {
   // Mounted here rather than at the root because it only has work to do once
@@ -84,6 +85,22 @@ function AppTabs() {
 
         {/* Reached from the header bell, not the tab bar. */}
         <Tabs.Screen name="notifications" options={{ href: null }} />
+
+        {/* Declared before settings so the bar splits two tabs to each side of
+            the action button — `AppTabBar` divides the visible tabs in
+            declaration order. */}
+        <Tabs.Screen
+          name="wallet"
+          options={{
+            title: t("wallet.title"),
+            tabBarIcon: ({ focused }) => (
+              <Icon
+                icon={Wallet01Icon}
+                color={focused ? "primary" : "textTertiary"}
+              />
+            ),
+          }}
+        />
 
         <Tabs.Screen
           name="settings"
