@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "ElectroSync",
-    "slug": "app",
+    "name": "Electro Sync",
+    "slug": "electro-sync",
     "version": "1.0.0",
     "orientation": "portrait",
     "newArchEnabled": false,
     "icon": "./assets/images/icon.png",
-    "scheme": "app",
+    "scheme": "electro-sync",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon",
@@ -20,7 +20,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.rajurayhan.app"
+      "package": "net.mohajon.electrosync"
     },
     "web": {
       "output": "static",
@@ -49,6 +49,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "06ba5ceb-ba01-42bf-b54a-f680c8757feb"
+      }
+    },
+    "owner": "rajurayhan"
   }
 }
