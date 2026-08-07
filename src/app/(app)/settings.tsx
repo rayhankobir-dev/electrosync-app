@@ -45,6 +45,7 @@ import {
   useUserSettings,
 } from "@/hooks/use-user-settings";
 import { useI18n, type TranslationKey } from "@/i18n";
+import { usePush } from "@/notifications/push-provider";
 import {
   isValidMobile,
   parseWholeAmount,
@@ -463,6 +464,7 @@ function Notifications() {
     refetch,
   } = useUserSettings();
   const { save, toggled } = useSaveSetting();
+  const { isBlocked, enable } = usePush();
 
   if (isError) {
     return (
@@ -494,30 +496,49 @@ function Notifications() {
   const threshold = settings?.lowBalanceThreshold ?? THRESHOLDS[1];
   const anomalyPercent = settings?.usageAnomalyThreshold ?? ANOMALY_PERCENTS[1];
 
-  // Everything else is meaningless while the master switch is off.
-  const mutedByPush = loading || !pushEnabled;
+  // Everything else is meaningless while the master switch is off — or while the
+  // OS is dropping whatever the switch lets through.
+  const mutedByPush = loading || !pushEnabled || isBlocked;
 
   return (
     <Section>
-      <ListRow
-        icon={BellDotIcon}
-        label={t("settings.pushEnabled")}
-        detail={t("settings.pushEnabledHint")}
-        disabled={loading}
-        trailing={
-          <Switch
-            value={pushEnabled}
-            disabled={loading}
-            onValueChange={(next) =>
-              save(
-                { pushEnabled: next },
-                toggled("settings.pushEnabled", next),
-              )
-            }
-            accessibilityLabel={t("settings.pushEnabled")}
-          />
-        }
-      />
+      {isBlocked ? (
+        /**
+         * Replaces the switch rather than sitting above it, because with the OS
+         * permission gone the switch has nothing useful to do: `pushEnabled` is a
+         * server-side delivery preference, and turning it on cannot make the
+         * handset accept a notification. Offering it anyway is what let the old
+         * screen confirm "Push notifications turned on" over a dead channel.
+         */
+        <ListRow
+          icon={Alert02Icon}
+          label={t("settings.pushBlocked")}
+          detail={t("settings.pushBlockedHint")}
+          tone="danger"
+          chevron
+          onPress={() => void enable()}
+        />
+      ) : (
+        <ListRow
+          icon={BellDotIcon}
+          label={t("settings.pushEnabled")}
+          detail={t("settings.pushEnabledHint")}
+          disabled={loading}
+          trailing={
+            <Switch
+              value={pushEnabled}
+              disabled={loading}
+              onValueChange={(next) =>
+                save(
+                  { pushEnabled: next },
+                  toggled("settings.pushEnabled", next),
+                )
+              }
+              accessibilityLabel={t("settings.pushEnabled")}
+            />
+          }
+        />
+      )}
 
       <ListRow
         icon={Alert02Icon}

@@ -193,6 +193,7 @@
   },
   "notifications": {
     "title": "নোটিফিকেশন",
+    "channelName": "ব্যালেন্স ও রিচার্জ সতর্কতা",
     "open": "নোটিফিকেশন খুলুন",
     "unreadBadge": "{{count}}টি অপঠিত",
     "emptyTitle": "এখানে এখনও কিছু নেই",
@@ -239,6 +240,8 @@
     "notification": "নোটিফিকেশন",
     "pushEnabled": "পুশ নোটিফিকেশন",
     "pushEnabledHint": "বন্ধ করলে নিচের সব সতর্কতা বন্ধ হয়ে যাবে।",
+    "pushBlocked": "নোটিফিকেশন বন্ধ আছে",
+    "pushBlockedHint": "আপনার ফোন Electro Sync-এর সতর্কতা আটকে রেখেছে, তাই নিচের কিছুই আপনার কাছে পৌঁছাবে না। চালু করতে ট্যাপ করুন।",
     "lowBalanceAlerts": "কম ব্যালেন্স সতর্কতা",
     "lowBalanceThreshold": "এর নিচে সতর্ক করুন",
     "rechargeAlerts": "রিচার্জ সতর্কতা",

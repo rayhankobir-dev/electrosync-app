@@ -20,7 +20,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "net.mohajon.electrosync"
+      "package": "net.mohajon.electrosync",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "output": "static",

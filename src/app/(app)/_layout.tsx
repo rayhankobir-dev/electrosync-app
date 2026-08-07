@@ -12,7 +12,7 @@ import { AppTabBar, FloatingTabAction } from "@/components/app-tab-bar";
 import { MeterFormHost, useMeterForm } from "@/components/meter-form-host";
 import { Icon } from "@/components/ui/icon";
 import { useI18n } from "@/i18n";
-import { usePushRegistration } from "@/notifications/use-push-registration";
+import { PushProvider } from "@/notifications/push-provider";
 import { useSettingsSync } from "@/settings/use-settings-sync";
 
 /**
@@ -25,14 +25,19 @@ export default function AppLayout() {
   // Mounted here rather than at the root because it only has work to do once
   // the user is authenticated.
   useSettingsSync();
-  // Sends this device's FCM token to the backend once signed in. No-ops on a
-  // simulator or when permission is refused.
-  usePushRegistration();
 
   return (
-    <MeterFormHost>
-      <AppTabs />
-    </MeterFormHost>
+    // Also mounted here rather than at the root, for the same reason, and it
+    // relies on it: the route guard unmounts this layout on sign-out, which is
+    // what resets the provider's per-session state without it tracking sign-out
+    // itself. It keeps the account's device token in step with whether the OS is
+    // actually letting notifications through, and `settings` reads it to show the
+    // truth rather than just the stored preference.
+    <PushProvider>
+      <MeterFormHost>
+        <AppTabs />
+      </MeterFormHost>
+    </PushProvider>
   );
 }
 

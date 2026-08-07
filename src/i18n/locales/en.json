@@ -193,6 +193,7 @@
   },
   "notifications": {
     "title": "Notifications",
+    "channelName": "Balance & recharge alerts",
     "open": "Open notifications",
     "unreadBadge": "{{count}} unread",
     "emptyTitle": "Nothing here yet",
@@ -239,6 +240,8 @@
     "notification": "Notification",
     "pushEnabled": "Push notifications",
     "pushEnabledHint": "Turn off to silence every alert below.",
+    "pushBlocked": "Notifications are switched off",
+    "pushBlockedHint": "Your phone is blocking alerts from Electro Sync, so nothing below can reach you. Tap to turn them back on.",
     "lowBalanceAlerts": "Low balance alerts",
     "lowBalanceThreshold": "Alert me below",
     "rechargeAlerts": "Recharge alerts",
