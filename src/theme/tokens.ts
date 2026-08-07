@@ -11,64 +11,64 @@
 const palette = {
   light: {
     /** App background, behind everything. */
-    background: '#F7F8FA',
+    background: "#F7F8FA",
     /** Cards, sheets, inputs. */
-    surface: '#FFFFFF',
+    surface: "#FFFFFF",
     /** A surface that needs to sit above another surface. */
-    surfaceRaised: '#FFFFFF',
+    surfaceRaised: "#FFFFFF",
     /** Pressed/hover state for surfaces. */
-    surfacePressed: '#EFF1F4',
+    surfacePressed: "#EFF1F4",
 
-    border: '#E6E8EC',
-    borderStrong: '#D3D7DE',
+    border: "#E6E8EC",
+    borderStrong: "#D3D7DE",
 
-    text: '#0D1117',
-    textSecondary: '#5B6472',
-    textTertiary: '#8A93A2',
-    textInverse: '#FFFFFF',
+    text: "#0D1117",
+    textSecondary: "#5B6472",
+    textTertiary: "#8A93A2",
+    textInverse: "#FFFFFF",
 
-    primary: '#1B7FE0',
-    primaryPressed: '#1668B8',
-    primarySoft: '#E8F2FD',
-    onPrimary: '#FFFFFF',
+    primary: "#1B7FE0",
+    primaryPressed: "#1668B8",
+    primarySoft: "#E8F2FD",
+    onPrimary: "#FFFFFF",
 
-    success: '#0E9F6E',
-    successSoft: '#E6F6F0',
-    warning: '#C77700',
-    warningSoft: '#FDF3E4',
-    danger: '#DC2B2B',
-    dangerSoft: '#FDECEC',
+    success: "#0E9F6E",
+    successSoft: "#E6F6F0",
+    warning: "#C77700",
+    warningSoft: "#FDF3E4",
+    danger: "#DC2B2B",
+    dangerSoft: "#FDECEC",
 
     /** Skeleton / placeholder fill. */
-    skeleton: '#E9ECF0',
+    skeleton: "#E9ECF0",
   },
   dark: {
-    background: '#0B0E13',
-    surface: '#141920',
-    surfaceRaised: '#1B212A',
-    surfacePressed: '#1F2630',
+    background: "#0B0E13",
+    surface: "#141920",
+    surfaceRaised: "#1B212A",
+    surfacePressed: "#1F2630",
 
-    border: '#242B35',
-    borderStrong: '#333C48',
+    border: "#242B35",
+    borderStrong: "#333C48",
 
-    text: '#F2F4F7',
-    textSecondary: '#9AA4B2',
-    textTertiary: '#6B7684',
-    textInverse: '#0B0E13',
+    text: "#F2F4F7",
+    textSecondary: "#9AA4B2",
+    textTertiary: "#6B7684",
+    textInverse: "#0B0E13",
 
-    primary: '#4D9FF0',
-    primaryPressed: '#3D89D6',
-    primarySoft: '#12283D',
-    onPrimary: '#06121F',
+    primary: "#4D9FF0",
+    primaryPressed: "#3D89D6",
+    primarySoft: "#12283D",
+    onPrimary: "#06121F",
 
-    success: '#2FBF8F',
-    successSoft: '#0C2A22',
-    warning: '#E0A63C',
-    warningSoft: '#2C2211',
-    danger: '#F16565',
-    dangerSoft: '#331616',
+    success: "#2FBF8F",
+    successSoft: "#0C2A22",
+    warning: "#E0A63C",
+    warningSoft: "#2C2211",
+    danger: "#F16565",
+    dangerSoft: "#331616",
 
-    skeleton: '#1C222B',
+    skeleton: "#1C222B",
   },
 } as const;
 
@@ -93,7 +93,7 @@ export const Palette = palette;
  */
 export function withAlpha(color: string, alpha: number): string {
   const byte = Math.round(Math.min(Math.max(alpha, 0), 1) * 255);
-  return `${color}${byte.toString(16).padStart(2, '0')}`;
+  return `${color}${byte.toString(16).padStart(2, "0")}`;
 }
 
 /** 4pt grid. Named by step so intent survives a redesign of the values. */
@@ -103,8 +103,8 @@ export const Spacing = {
   md: 12,
   lg: 16,
   xl: 24,
-  '2xl': 32,
-  '3xl': 48,
+  "2xl": 32,
+  "3xl": 48,
 } as const;
 
 export const Radius = {
@@ -121,32 +121,32 @@ export const Radius = {
  * name itself has to carry the weight.
  */
 export const TypeScale = {
-  display: { size: 40, lineHeight: 48, weight: '700' },
-  title1: { size: 28, lineHeight: 36, weight: '700' },
-  title2: { size: 22, lineHeight: 30, weight: '600' },
-  title3: { size: 18, lineHeight: 26, weight: '600' },
-  body: { size: 16, lineHeight: 24, weight: '400' },
-  bodyMedium: { size: 16, lineHeight: 24, weight: '500' },
-  callout: { size: 15, lineHeight: 22, weight: '400' },
-  subhead: { size: 14, lineHeight: 20, weight: '500' },
-  footnote: { size: 13, lineHeight: 18, weight: '400' },
-  caption: { size: 12, lineHeight: 16, weight: '500' },
+  display: { size: 40, lineHeight: 48, weight: "700" },
+  title1: { size: 28, lineHeight: 36, weight: "700" },
+  title2: { size: 22, lineHeight: 30, weight: "600" },
+  title3: { size: 18, lineHeight: 26, weight: "600" },
+  body: { size: 16, lineHeight: 24, weight: "400" },
+  bodyMedium: { size: 16, lineHeight: 24, weight: "500" },
+  callout: { size: 15, lineHeight: 22, weight: "400" },
+  subhead: { size: 14, lineHeight: 20, weight: "500" },
+  footnote: { size: 13, lineHeight: 18, weight: "400" },
+  caption: { size: 12, lineHeight: 16, weight: "500" },
   /**
    * Caption at semibold. For short labels that have to hold their own against a
    * filled background — table column headers — without going up a size and
    * competing with the data underneath.
    */
-  captionStrong: { size: 12, lineHeight: 16, weight: '600' },
+  captionStrong: { size: 12, lineHeight: 16, weight: "600" },
   /**
    * Smallest step, and the only one below the app's comfortable reading size.
    * Reserved for short overlay labels — a badge floating on a card, where a
    * `caption` would crowd the artwork it sits on. Never for prose.
    */
-  micro: { size: 10, lineHeight: 14, weight: '600' },
+  micro: { size: 10, lineHeight: 14, weight: "600" },
 } as const;
 
 export type TypeVariant = keyof typeof TypeScale;
-export type FontWeight = (typeof TypeScale)[TypeVariant]['weight'];
+export type FontWeight = (typeof TypeScale)[TypeVariant]["weight"];
 
 /**
  * Bengali needs more vertical room than Latin at the same point size.
@@ -173,9 +173,12 @@ const BENGALI_LINE_HEIGHT_RATIO = 1.62;
  * Line height for a variant in a given locale. Never returns less than the
  * Latin value, so switching to Bangla can only ever add space.
  */
-export function resolveLineHeight(variant: TypeVariant, locale: string): number {
+export function resolveLineHeight(
+  variant: TypeVariant,
+  locale: string,
+): number {
   const { size, lineHeight } = TypeScale[variant];
-  if (locale !== 'bn') return lineHeight;
+  if (locale !== "bn") return lineHeight;
 
   /**
    * `ceil`, not `round`. Rounding to nearest lands *under* the font's line box

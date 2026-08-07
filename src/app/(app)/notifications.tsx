@@ -1,4 +1,10 @@
-import { ArrowLeft01Icon, Notification03Icon } from '@hugeicons/core-free-icons';
+import {
+  ArrowLeft01Icon,
+  BatteryCharging01Icon,
+  BatteryEmptyIcon,
+  BatteryLowIcon,
+  Notification03Icon,
+} from '@hugeicons/core-free-icons';
 import { useRouter } from 'expo-router';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, View } from 'react-native';
 
@@ -12,7 +18,29 @@ import { Text } from '@/components/ui/text';
 import { useMarkNotificationRead, useNotifications } from '@/hooks/use-notifications';
 import { useI18n } from '@/i18n';
 import { isoToEpochSeconds, relativeTime } from '@/lib/relative-time';
-import { HitSlop, Radius, Spacing, useTheme } from '@/theme';
+import { HitSlop, Radius, Spacing, useTheme, withAlpha, type ColorName } from '@/theme';
+
+/**
+ * Per-kind accent for the rows the balance sweep produces. The kind rides in
+ * the notification's untyped `data` bag (see the backend's `push()`), so it is
+ * narrowed at runtime rather than typed on `Notification`.
+ *
+ * `tone` names a theme colour that also has a `${tone}Soft` companion — the
+ * pair is what lets the card tint and the icon badge stay in step across
+ * light and dark.
+ */
+const ALERT_STYLES = {
+  LOW_BALANCE: { icon: BatteryLowIcon, tone: 'warning' },
+  BALANCE_DEPLETED: { icon: BatteryEmptyIcon, tone: 'danger' },
+  RECHARGE_DETECTED: { icon: BatteryCharging01Icon, tone: 'success' },
+} as const;
+
+type AlertKind = keyof typeof ALERT_STYLES;
+
+function alertKind(data: Notification['data']): AlertKind | null {
+  const kind = data?.kind;
+  return typeof kind === 'string' && kind in ALERT_STYLES ? (kind as AlertKind) : null;
+}
 
 export default function NotificationsScreen() {
   const router = useRouter();
@@ -84,18 +112,43 @@ function NotificationRow({
       ? formatDate(sentAt)
       : t(relative.key, { count: formatNumber(relative.count) });
 
+  const kind = alertKind(notification.data);
+  const alert = kind ? ALERT_STYLES[kind] : null;
+
+  // The kind sets the card's colour; read state only sets how loud it is. A
+  // low-balance row that has been opened is still a low-balance row, so the
+  // tint stays and the border drops back to the neutral one.
+  const accent: ColorName = alert ? alert.tone : 'primary';
+  const accentSoft = `${accent}Soft` as ColorName;
+
   return (
     <Pressable onPress={onPress} disabled={!unread}>
       <Card
         style={{
           // Unread carries a tint as well as the dot: the dot alone is easy to
           // miss when scanning a long list.
-          backgroundColor: unread ? colors.primarySoft : colors.surface,
-          borderColor: unread ? colors.primary : colors.border,
+          backgroundColor: alert || unread ? colors[accentSoft] : colors.surface,
+          borderColor: unread ? colors[accent] : colors.border,
         }}
       >
         <View style={styles.row}>
-          {unread ? <View style={[styles.dot, { backgroundColor: colors.primary }]} /> : null}
+          <View
+            style={[
+              styles.badge,
+              {
+                // A translucent accent rather than a solid one: the badge sits
+                // on the card's own soft tint, and stacking the two shades of
+                // the same hue reads as one object instead of a sticker.
+                backgroundColor: alert ? withAlpha(colors[accent], 0.16) : colors.surfacePressed,
+              },
+            ]}
+          >
+            <Icon
+              icon={alert ? alert.icon : Notification03Icon}
+              size={20}
+              color={alert ? accent : 'textTertiary'}
+            />
+          </View>
 
           <View style={styles.rowMain}>
             <Text variant="bodyMedium" numberOfLines={2}>
@@ -108,6 +161,8 @@ function NotificationRow({
               {timeLabel}
             </Text>
           </View>
+
+          {unread ? <View style={[styles.dot, { backgroundColor: colors[accent] }]} /> : null}
         </View>
       </Card>
     </Pressable>
@@ -160,6 +215,13 @@ const styles = StyleSheet.create({
   rowMain: {
     flex: 1,
     gap: 2,
+  },
+  badge: {
+    width: 38,
+    height: 38,
+    borderRadius: Radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   dot: {
     width: 8,

@@ -10,7 +10,7 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon",
-      "bundleIdentifier": "com.rajurayhan.app"
+      "bundleIdentifier": "net.mohajon.electrosync"
     },
     "android": {
       "adaptiveIcon": {
