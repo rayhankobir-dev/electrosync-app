@@ -428,6 +428,7 @@ function ThresholdRow({
         <TextField
           label={t("settings.thresholdCustom")}
           required
+          leadingIcon={FlashIcon}
           value={draft}
           onChangeText={setDraft}
           onBlur={commit}

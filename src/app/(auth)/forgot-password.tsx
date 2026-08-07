@@ -1,3 +1,4 @@
+import { Mail01Icon } from "@hugeicons/core-free-icons";
 import { Link, router } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
@@ -95,6 +96,7 @@ export default function ForgotPasswordScreen() {
         <TextField
           label={t("auth.fields.email")}
           required
+          leadingIcon={Mail01Icon}
           placeholder={t("auth.fields.emailPlaceholder")}
           value={email}
           onChangeText={setEmail}

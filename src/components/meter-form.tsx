@@ -1,3 +1,4 @@
+import { IdentityCardIcon, Tag01Icon } from '@hugeicons/core-free-icons';
 import { useState } from 'react';
 import { Modal, StyleSheet, View } from 'react-native';
 
@@ -139,6 +140,7 @@ export function MeterForm({
               <TextField
                 label={t('meters.customerNo')}
                 required
+                leadingIcon={IdentityCardIcon}
                 placeholder={t('meters.customerNoPlaceholder')}
                 value={customerNo}
                 onChangeText={setCustomerNo}
@@ -150,6 +152,7 @@ export function MeterForm({
 
           <TextField
             label={t('meters.label')}
+            leadingIcon={Tag01Icon}
             placeholder={t('meters.labelPlaceholder')}
             value={label}
             onChangeText={setLabel}

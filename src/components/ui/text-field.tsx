@@ -1,4 +1,5 @@
 import { ViewIcon, ViewOffSlashIcon } from '@hugeicons/core-free-icons';
+import type { IconSvgElement } from '@hugeicons/react-native';
 import { useState } from 'react';
 import {
   Pressable,
@@ -19,6 +20,12 @@ export type TextFieldProps = Omit<TextInputProps, 'style'> & {
   error?: string | null;
   hint?: string;
   /**
+   * Decorative glyph inside the field, before the text. It restates the label
+   * rather than adding meaning, so it carries no accessibility label — a screen
+   * reader announcing "mail, Email" would just say the same thing twice.
+   */
+  leadingIcon?: IconSvgElement;
+  /**
    * Marks the label with a red asterisk. Optional fields say nothing at all —
    * the marker only earns its place if it is the exception, and labelling both
    * cases means the user has to read every one to find the few that matter.
@@ -30,6 +37,7 @@ export function TextField({
   label,
   error,
   hint,
+  leadingIcon,
   required = false,
   secureTextEntry,
   onFocus,
@@ -45,6 +53,9 @@ export function TextField({
   // Error outranks focus: a red border that turns blue on focus would hide the
   // very state the user needs to fix.
   const borderColor = error ? colors.danger : focused ? colors.primary : colors.border;
+  // Same precedence for the leading glyph, so the two halves of the field never
+  // disagree about which state it is in.
+  const leadingColor = error ? 'danger' : focused ? 'primary' : 'textTertiary';
 
   return (
     <View style={styles.wrapper}>
@@ -64,8 +75,17 @@ export function TextField({
         style={[
           styles.field,
           { backgroundColor: colors.surface, borderColor },
+          // The glyph brings its own optical whitespace, so the usual left
+          // inset would read as a gap rather than as alignment.
+          leadingIcon ? styles.fieldWithLeading : null,
           focused && !error ? { borderWidth: 1.5 } : null,
         ]}>
+        {leadingIcon ? (
+          <View style={styles.leading} accessibilityElementsHidden importantForAccessibility="no">
+            <Icon icon={leadingIcon} size={20} color={leadingColor} />
+          </View>
+        ) : null}
+
         <TextInput
           style={[
             styles.input,
@@ -123,6 +143,12 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     borderWidth: 1,
     paddingHorizontal: Spacing.lg,
+  },
+  fieldWithLeading: {
+    paddingLeft: Spacing.md,
+  },
+  leading: {
+    paddingRight: Spacing.sm,
   },
   input: {
     flex: 1,

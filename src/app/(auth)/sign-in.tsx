@@ -1,3 +1,4 @@
+import { LockPasswordIcon, Mail01Icon } from "@hugeicons/core-free-icons";
 import { Link } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
@@ -78,6 +79,7 @@ export default function SignInScreen() {
         <TextField
           label={t("auth.fields.email")}
           required
+          leadingIcon={Mail01Icon}
           placeholder={t("auth.fields.emailPlaceholder")}
           value={email}
           onChangeText={setEmail}
@@ -92,6 +94,7 @@ export default function SignInScreen() {
         <TextField
           label={t("auth.fields.password")}
           required
+          leadingIcon={LockPasswordIcon}
           placeholder={t("auth.fields.passwordPlaceholder")}
           value={password}
           onChangeText={setPassword}

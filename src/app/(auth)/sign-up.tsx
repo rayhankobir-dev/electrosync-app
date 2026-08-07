@@ -1,4 +1,10 @@
-import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
+import {
+  ArrowLeft01Icon,
+  LockPasswordIcon,
+  Mail01Icon,
+  SmartPhone01Icon,
+  UserIcon,
+} from '@hugeicons/core-free-icons';
 import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -97,6 +103,7 @@ export default function SignUpScreen() {
         <TextField
           label={t('auth.fields.name')}
           required
+          leadingIcon={UserIcon}
           placeholder={t('auth.fields.namePlaceholder')}
           value={name}
           onChangeText={setName}
@@ -108,6 +115,7 @@ export default function SignUpScreen() {
         <TextField
           label={t('auth.fields.email')}
           required
+          leadingIcon={Mail01Icon}
           placeholder={t('auth.fields.emailPlaceholder')}
           value={email}
           onChangeText={setEmail}
@@ -121,6 +129,7 @@ export default function SignUpScreen() {
         <TextField
           label={t('auth.fields.password')}
           required
+          leadingIcon={LockPasswordIcon}
           placeholder={t('auth.fields.passwordPlaceholder')}
           value={password}
           onChangeText={setPassword}
@@ -133,6 +142,7 @@ export default function SignUpScreen() {
 
         <TextField
           label={t('auth.fields.mobile')}
+          leadingIcon={SmartPhone01Icon}
           placeholder={t('auth.fields.mobilePlaceholder')}
           value={mobile}
           onChangeText={setMobile}

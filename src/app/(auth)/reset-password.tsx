@@ -1,3 +1,4 @@
+import { LockPasswordIcon, SecurityPasswordIcon } from "@hugeicons/core-free-icons";
 import { Link, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
@@ -162,6 +163,7 @@ export default function ResetPasswordScreen() {
         <TextField
           label={t("auth.resetPassword.code")}
           required
+          leadingIcon={SecurityPasswordIcon}
           placeholder={t("auth.resetPassword.codePlaceholder")}
           value={code}
           onChangeText={setCode}
@@ -179,6 +181,7 @@ export default function ResetPasswordScreen() {
         <TextField
           label={t("auth.resetPassword.newPassword")}
           required
+          leadingIcon={LockPasswordIcon}
           placeholder={t("auth.fields.passwordPlaceholder")}
           value={password}
           onChangeText={setPassword}
@@ -193,6 +196,7 @@ export default function ResetPasswordScreen() {
         <TextField
           label={t("auth.resetPassword.confirmPassword")}
           required
+          leadingIcon={LockPasswordIcon}
           placeholder={t("auth.resetPassword.confirmPlaceholder")}
           value={confirm}
           onChangeText={setConfirm}
