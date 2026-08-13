@@ -15,7 +15,7 @@ import { Icon } from './icon';
 import { Text } from './text';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
-export type ButtonSize = 'md' | 'lg';
+export type ButtonSize = 'sm' | 'md' | 'lg';
 
 export type ButtonProps = Omit<PressableProps, 'style' | 'children'> & {
   label: string;
@@ -27,7 +27,14 @@ export type ButtonProps = Omit<PressableProps, 'style' | 'children'> & {
   style?: ViewStyle;
 };
 
-const HEIGHT: Record<ButtonSize, number> = { md: 44, lg: 52 };
+/**
+ * `sm` exists for controls that share a line with a title rather than owning a
+ * row — a header action beside a 30pt heading, where a 44pt block out-weighs the
+ * words it belongs to. It is under the 44pt touch minimum on purpose: callers at
+ * this size pair it with `hitSlop`, which widens the target without widening the
+ * shape.
+ */
+const HEIGHT: Record<ButtonSize, number> = { sm: 32, md: 44, lg: 52 };
 
 /**
  * Lifted out of `Button` so `IconButton` renders from the same table. The two

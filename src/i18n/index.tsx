@@ -37,22 +37,82 @@ type Params = Record<string, string | number>;
 
 const BENGALI_DIGITS = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
 
-const PORTAL_MONTHS = new Map<string, number>(
-  Object.entries(bn.months).map(([number, name]) => [name, Number(number)]),
-);
+/**
+ * A month name reduced to a form that compares equal across the spellings the
+ * same month is written in.
+ *
+ * The portal's month cell is a rendered string, not an enum, and Bangla month
+ * names have more than one accepted spelling: জানুয়ারী and জানুয়ারি differ
+ * only by a vowel sign, আগষ্ট and আগস্ট only by a sibilant, সেপ্টেম্বার and
+ * সেপ্টেম্বর only by an ending. Matching the raw string means one of those
+ * spellings maps and the rest fall through to the untranslated portal text —
+ * which reads as Bangla inside the Bangla app and so hides itself there, while
+ * showing up as Bangla in the middle of the English one.
+ *
+ * Folding both the map's keys and the lookup means a variant costs a label, not
+ * a match.
+ */
+function foldMonthName(raw: string): string {
+  return (
+    raw
+      .trim()
+      .toLowerCase()
+      // Zero-width joiners ride along in HTML and break string equality while
+      // being invisible in every place a human would look for the difference.
+      .replace(/[‌‍]/g, "")
+      .replace(/\s+/g, "")
+      // Long ī for short i, মূর্ধন্য ষ for দন্ত্য স, and the -বার ending for
+      // -বর. Applied to the keys as well, so this is a fold, not a guess about
+      // which spelling is correct.
+      .replace(/ী/g, "ি")
+      .replace(/ষ/g, "স")
+      .replace(/বার$/, "বর")
+  );
+}
+
+/**
+ * Folded month name → month number, built from both bundles.
+ *
+ * English names and their three-letter abbreviations are indexed alongside the
+ * Bangla ones because the portal already answers in both: its recharge dates
+ * carry `'JAN'`-style abbreviations, so an English month cell is not a
+ * hypothetical shape for the same source to return.
+ */
+const MONTH_NUMBERS = new Map<string, number>();
+
+for (const [number, name] of Object.entries(bn.months)) {
+  MONTH_NUMBERS.set(foldMonthName(name), Number(number));
+}
+
+for (const [number, name] of Object.entries(en.months)) {
+  MONTH_NUMBERS.set(foldMonthName(name), Number(number));
+  MONTH_NUMBERS.set(foldMonthName(name.slice(0, 3)), Number(number));
+}
+
+/**
+ * Spellings no fold reaches, because they differ by a whole letter rather than a
+ * sign. Listed rather than folded for exactly that reason — a rule loose enough
+ * to catch these would start matching things that are not months.
+ */
+for (const [name, number] of Object.entries({
+  অগাস্ট: 8,
+  অগস্ট: 8,
+})) {
+  MONTH_NUMBERS.set(foldMonthName(name), number);
+}
 
 /**
  * Month number 1-12 for a month name as the NESCO portal renders it, or `null`
  * if it is not one.
  *
  * A plain function rather than part of the `useI18n` value: it does not depend
- * on the active locale — the portal always answers in Bangla — and callers need
- * it for *ordering*, which has to work the same in both languages. Sorting
- * consumption rows is impossible without it, since the wire format carries the
- * month only as a localised string.
+ * on the active locale — the portal answers in its own language, not the app's —
+ * and callers need it for *ordering*, which has to work the same in both
+ * languages. Sorting consumption rows is impossible without it, since the wire
+ * format carries the month only as a localised string.
  */
 export function portalMonthNumber(portalMonth: string): number | null {
-  return PORTAL_MONTHS.get(portalMonth.trim()) ?? null;
+  return MONTH_NUMBERS.get(foldMonthName(portalMonth)) ?? null;
 }
 
 function toBengaliDigits(input: string): string {
@@ -91,6 +151,16 @@ export type I18n = {
   /** Falls back to English, then to the key itself, so the UI never renders blank. */
   t(key: TranslationKey, params?: Params): string;
   formatNumber(value: number, fractionDigits?: number): string;
+  /**
+   * Rewrites ASCII digits into the active locale's numerals, leaving every other
+   * character alone.
+   *
+   * For digits that arrive already formed — meter and consumer numbers, which
+   * are identifiers rather than quantities and so must keep their exact length
+   * and any leading zero. Idempotent: text that is already in Bangla numerals
+   * passes through untouched.
+   */
+  localizeDigits(text: string): string;
   /** BDT, with the symbol leading: `৳1,523.45`. */
   formatCurrency(value: number, fractionDigits?: number): string;
   /** Takes Unix epoch **seconds**, which is what every backend timestamp uses. */
@@ -159,6 +229,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       t: (key, params) =>
         interpolate(lookup(locale, key) ?? lookup("en", key) ?? key, params),
       formatNumber,
+      localizeDigits,
       formatCurrency: (input, fractionDigits = 2) =>
         `${lookup(locale, "common.currencySymbol") ?? "৳"}${formatNumber(input, fractionDigits)}`,
       formatDate: (epochSeconds) => {
@@ -173,8 +244,12 @@ export function I18nProvider({ children }: { children: ReactNode }) {
         lookup(locale, `months.${month}`) ?? String(month),
       formatYear: (year) => localizeDigits(String(Math.trunc(year))),
       localizePortalMonth: (portalMonth) => {
-        const month = PORTAL_MONTHS.get(portalMonth.trim());
-        if (month === undefined) return portalMonth;
+        // Same lookup the sort uses, so a month can never label one way and
+        // order another.
+        const month = portalMonthNumber(portalMonth);
+        // The portal's own wording is a poor label, but it is a truthful one —
+        // better than a dash where a month belongs.
+        if (month === null) return portalMonth;
         return lookup(locale, `months.${month}`) ?? portalMonth;
       },
     };

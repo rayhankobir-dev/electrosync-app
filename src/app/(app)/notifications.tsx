@@ -1,10 +1,8 @@
 import {
-  ArrowLeft01Icon,
   CheckmarkCircle02Icon,
   Delete02Icon,
   Notification03Icon,
 } from '@hugeicons/core-free-icons';
-import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import {
   Alert,
@@ -23,7 +21,9 @@ import {
   isFiltering,
   type NotificationFilter,
 } from '@/components/notification-filters';
+import { ScreenHeader } from '@/components/screen-header';
 import { Banner } from '@/components/ui/banner';
+import { IconButton } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
 import { Screen } from '@/components/ui/screen';
@@ -47,7 +47,6 @@ import { ALERT_STYLES, alertKind } from '@/notifications/kinds';
 import { HitSlop, Radius, Spacing, useTheme, withAlpha, type ColorName } from '@/theme';
 
 export default function NotificationsScreen() {
-  const router = useRouter();
   const { t } = useI18n();
   const toast = useToast();
   const { data, isPending, isError, error, refetch, isRefetching } = useNotifications();
@@ -118,34 +117,33 @@ export default function NotificationsScreen() {
 
   return (
     <Screen edgeToEdgeBottom={false}>
-      <View style={styles.topBar}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t('common.back')}
-          hitSlop={HitSlop / 4}
-          onPress={() => router.back()}
-        >
-          <Icon icon={ArrowLeft01Icon} color="textSecondary" />
-        </Pressable>
-        <Text variant="title2" style={styles.topTitle} numberOfLines={1}>
-          {t('notifications.title')}
-        </Text>
-
-        <TopAction
-          icon={CheckmarkCircle02Icon}
-          label={t('notifications.markAllRead')}
-          tone="primary"
-          disabled={!canMarkAllRead}
-          onPress={onMarkAllRead}
-        />
-        <TopAction
-          icon={Delete02Icon}
-          label={t('notifications.clearAll')}
-          tone="danger"
-          disabled={!canClearAll}
-          onPress={onClearAll}
-        />
-      </View>
+      <ScreenHeader
+        title={t('notifications.title')}
+        // The bell lives *in* this header everywhere else and would point at the
+        // page it is already on.
+        bell={false}
+        action={
+          // Grouped in their own row rather than handed over as two siblings, so
+          // the pair stays tighter than the header's own gap — they are one
+          // cluster of list actions, not two unrelated controls.
+          <View style={styles.topActions}>
+            <TopAction
+              icon={CheckmarkCircle02Icon}
+              label={t('notifications.markAllRead')}
+              tone="primary"
+              disabled={!canMarkAllRead}
+              onPress={onMarkAllRead}
+            />
+            <TopAction
+              icon={Delete02Icon}
+              label={t('notifications.clearAll')}
+              tone="danger"
+              disabled={!canClearAll}
+              onPress={onClearAll}
+            />
+          </View>
+        }
+      />
 
       {/* Kept out of the error and loading branches: a filter row that appears
           only once the list has loaded makes the header jump on every open. */}
@@ -248,22 +246,33 @@ function TopAction({
   onPress(): void;
 }) {
   return (
-    <Pressable
-      accessibilityRole="button"
+    // `secondary` is the outlined variant — surface fill over a hairline border.
+    // A bare glyph beside the title read as decoration rather than as something
+    // pressable, and the two most consequential actions on the screen were the
+    // ones least identifiable as controls.
+    <IconButton
       accessibilityLabel={label}
-      accessibilityState={{ disabled }}
-      hitSlop={HitSlop / 4}
+      variant="secondary"
+      size="sm"
+      // Half the 12pt gap between the pair, so each target grows to the 44pt
+      // minimum and the two regions meet without ever overlapping — mis-routing a
+      // tap here would mean clearing the list when the user meant to mark it read.
+      hitSlop={ACTION_SLOP}
       disabled={disabled}
       onPress={onPress}
-      style={({ pressed }) => pressed && styles.actionPressed}
     >
-      {/* Greyed rather than hidden. These sit beside the title, and a control
-          that vanishes when the list empties makes the header reflow every
-          time the last notification is read. */}
-      <Icon icon={icon} size={22} color={disabled ? 'textTertiary' : tone} />
-    </Pressable>
+      {/* Dimmed by the button's own disabled opacity rather than by a tertiary
+          tint, so the glyph keeps its tone and the whole control fades as one.
+          Still rendered when inert: these sit beside the title, and a control
+          that vanishes when the list empties makes the header reflow every time
+          the last notification is read. */}
+      <Icon icon={icon} size={18} color={tone} />
+    </IconButton>
   );
 }
+
+/** Half of `topActions`' gap. See the note at the `hitSlop` above. */
+const ACTION_SLOP = Spacing.md / 2;
 
 function NotificationRow({
   notification,
@@ -399,11 +408,10 @@ function NoMatches({ onClear }: { onClear(): void }) {
 }
 
 const styles = StyleSheet.create({
-  topBar: {
+  topActions: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.md,
-    marginBottom: Spacing.md,
   },
   filters: {
     marginBottom: Spacing.lg,
@@ -421,9 +429,6 @@ const styles = StyleSheet.create({
   },
   clearFilter: {
     marginTop: Spacing.xs,
-  },
-  topTitle: {
-    flex: 1,
   },
   list: {
     gap: Spacing.md,

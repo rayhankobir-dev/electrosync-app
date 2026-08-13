@@ -53,6 +53,19 @@
       "resent": "A new code is on its way.",
       "success": "Password changed. You're signed in."
     },
+    "changePassword": {
+      "title": "Change password",
+      "subtitle": "Enter your current password, then the one you'd like to use.",
+      "currentPassword": "Current password",
+      "currentPlaceholder": "The password you use now",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm new password",
+      "confirmPlaceholder": "Type it once more",
+      "submit": "Update password",
+      "success": "Your password is updated",
+      "signedInNote": "You'll stay signed in on this device, and on any other device already signed in.",
+      "forgot": "Don't remember your current password? Sign out, then use “Forgot password?” on the sign-in screen."
+    },
     "fields": {
       "name": "Full name",
       "namePlaceholder": "Md. Raju Ahmed",
@@ -73,7 +86,9 @@
       "codeRequired": "Enter the code from your email.",
       "codeInvalid": "The code is 6 digits.",
       "confirmRequired": "Type your new password again.",
-      "passwordMismatch": "Those passwords don't match."
+      "passwordMismatch": "Those passwords don't match.",
+      "currentPasswordRequired": "Enter your current password.",
+      "passwordUnchanged": "Your new password has to be different from your current one."
     },
     "signOut": "Sign out",
     "signOutConfirm": "Sign out of ElectroSync?"
@@ -103,6 +118,10 @@
     "rechargeYesterday": "Yesterday",
     "rechargeDaysAgo": "{{days}} days ago",
     "rechargeNone": "None yet",
+    "lasts": "Lasts",
+    "runwayUnderDay": "Under a day",
+    "runwayDays": "~{{days}} days",
+    "runwayLong": "{{days}}+ days",
     "notMeasured": "Not measured",
     "supplyOkTitle": "No issues",
     "supplyOkBody": "Your electricity is on.",
@@ -186,10 +205,13 @@
       "closing": "Closing"
     },
     "kwh": "kWh",
+    "days": "days",
     "info": "Info",
     "avgSpend": "Avg spend",
     "avgUnits": "Avg units",
-    "lastClosing": "Last closing"
+    "lastClosing": "Last closing",
+    "remainDesc": "This is an estimate only",
+    "remain": "With current balance"
   },
   "notifications": {
     "title": "Notifications",
@@ -227,6 +249,9 @@
     "emailFixed": "Your email is how you sign in, so it can't be changed here.",
     "verified": "Verified",
     "profileSaved": "Your details are saved",
+    "security": "Security",
+    "changePassword": "Change password",
+    "changePasswordHint": "You'll need your current password to set a new one.",
     "appearance": "Appearance",
     "theme": "Theme",
     "themeLight": "Light",
@@ -265,8 +290,10 @@
     "channelNumberHint": "We'll send alerts to this number.",
     "channelNumberInvalid": "Enter a valid phone number.",
     "channelUsingProfile": "Sending to {{contact}}",
+    "emailChannelProfile": "Sending to {{contact}}",
     "channelNumberSaved": "Alerts will go to {{contact}}",
-    "channelNeedsNumber": "Add a number to start receiving these."
+    "channelNeedsNumber": "Add a number to start receiving these.",
+    "channelComingSoon": "Coming soon."
   },
   "errors": {
     "network": "Can't reach the server. Check your connection.",
@@ -280,6 +307,7 @@
     "invalidCredentials": "Wrong email or password.",
     "emailTaken": "An account with that email already exists.",
     "invalidResetCode": "That code is wrong or has expired. Request a new one.",
+    "invalidCurrentPassword": "That's not your current password.",
     "tooManyRequests": "Too many attempts. Please wait a moment and try again."
   },
   "wallet": {

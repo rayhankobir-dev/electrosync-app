@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 
 import { Radius, Spacing, useTheme } from "@/theme";
@@ -28,6 +28,40 @@ const ITEMS: Record<ColumnAlign, "flex-start" | "center" | "flex-end"> = {
   center: "center",
   right: "flex-end",
 };
+
+/**
+ * Column widths grown to fill `target`, or the declared widths untouched when
+ * the table is already at least that wide.
+ *
+ * A declared width is a *minimum*, not a fixed size. Left as fixed, a table
+ * narrower than its container stopped short of the right edge and left the
+ * header band and row rules ending in mid-air, which reads as a broken layout
+ * rather than as a narrow table.
+ *
+ * Grown proportionally, so the ratios the columns were designed at survive —
+ * handing the whole surplus to one column would widen `date` into a gap and
+ * leave the figures beside it as cramped as before.
+ *
+ * Rounded to whole pixels, with the drift given to the last column so the parts
+ * still sum to exactly `target`. Fractional widths would leave a hairline of
+ * card showing past the end of the header band. The rounding has to resolve to
+ * the *same* numbers for the header and the body, which is why this returns one
+ * array that both read from rather than being recomputed per row.
+ *
+ * Returning early when `target` is smaller is what keeps the horizontal scroll
+ * working: a table wider than its container must keep its declared widths, or
+ * shrinking it to fit would defeat the ScrollView it lives in.
+ */
+function fillWidths(declared: readonly number[], target: number): number[] {
+  const natural = declared.reduce((sum, width) => sum + width, 0);
+  if (natural <= 0 || target <= natural) return [...declared];
+
+  const grown = declared.map((width) => Math.round((width / natural) * target));
+  const drift = target - grown.reduce((sum, width) => sum + width, 0);
+  grown[grown.length - 1] += drift;
+
+  return grown;
+}
 
 /**
  * Columns carry explicit widths and the grid scrolls horizontally as one unit,
@@ -71,8 +105,28 @@ export function DataTable<T>({
   bleed?: number;
 }) {
   const { colors } = useTheme();
-  const totalWidth =
-    columns.reduce((sum, column) => sum + column.width, 0) + bleed * 2;
+
+  /**
+   * The track's own width, from its last layout pass. Zero until it has been
+   * measured, which resolves to the declared widths — so the first paint is the
+   * natural table rather than one collapsed into no width.
+   */
+  const [available, setAvailable] = useState(0);
+
+  // A framed table draws its own hairline on each side, outside `totalWidth` —
+  // see the note on the wrapper below. Filling the track edge to edge without
+  // allowing for it would push the frame a pixel past the end and leave the
+  // table scrollable by that pixel.
+  const frame = bleed === 0 ? StyleSheet.hairlineWidth * 2 : 0;
+
+  // Measured against the same span the columns cover: the track escapes the
+  // container's padding by `bleed` on each side, and `bleed` is inside
+  // `totalWidth` too, so both sides of this comparison already include it.
+  const widths = fillWidths(
+    columns.map((column) => column.width),
+    available - bleed * 2 - frame,
+  );
+  const totalWidth = widths.reduce((sum, width) => sum + width, 0) + bleed * 2;
 
   /**
    * Horizontal padding for a cell at `index`, applied identically to the header
@@ -86,7 +140,7 @@ export function DataTable<T>({
     return {
       // The bleed is added to the column's width as well as its padding, so the
       // content box stays exactly as wide as its declared width minus the gutter.
-      width: columns[index].width + leading + trailing,
+      width: widths[index] + leading + trailing,
       paddingLeft: GUTTER / 2 + leading,
       paddingRight: GUTTER / 2 + trailing,
     };
@@ -109,6 +163,9 @@ export function DataTable<T>({
       // Stops a short table from being draggable, which feels broken.
       alwaysBounceHorizontal={false}
       style={{ marginHorizontal: -bleed }}
+      // The track's frame, not its content: measuring the content would feed the
+      // widths derived from it straight back in as their own input.
+      onLayout={(event) => setAvailable(event.nativeEvent.layout.width)}
     >
       {/* The outer rule goes on a wrapper with no declared width: on the inner
           View it would eat two pixels out of `totalWidth`, and the cells would

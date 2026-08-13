@@ -6,6 +6,7 @@ import {
   Copy01Icon,
   DashboardSpeed01Icon,
   FlashOffIcon,
+  HourglassIcon,
   IdIcon,
   PlusSignIcon,
   Tick02Icon,
@@ -31,7 +32,7 @@ import {
   RibbonBand,
   TypeRibbon,
 } from "@/components/card-ribbons";
-import { MeterArtwork } from "@/components/meter-artwork";
+import { MeterArtwork, MeterTypeLabelKey } from "@/components/meter-artwork";
 import { useMeterForm } from "@/components/meter-form-host";
 import { QuickActions, type QuickAction } from "@/components/quick-actions";
 import { ScreenHeader } from "@/components/screen-header";
@@ -50,7 +51,11 @@ import { Text } from "@/components/ui/text";
 import { useToast } from "@/components/ui/toast-host";
 import { UsageTrendCard } from "@/components/usage-trend-card";
 import { WeeklyRhythmCard } from "@/components/weekly-rhythm-card";
-import { useUsageTrend } from "@/hooks/use-analytics";
+import {
+  RUNWAY_MAX_DAYS,
+  useBalanceRunway,
+  useUsageTrend,
+} from "@/hooks/use-analytics";
 import { usePrimaryMeter } from "@/hooks/use-meters";
 import { useCustomerInfo, useRecharges } from "@/hooks/use-utility-data";
 import { useI18n, type TranslationKey } from "@/i18n";
@@ -74,7 +79,11 @@ export default function HomeScreen() {
 
   return (
     <Screen edgeToEdgeBottom={false}>
-      <ScreenHeader title={t("home.greeting", { name: user?.name ?? "" })} />
+      {/* `root`: the tab bar is how you leave home, not a back arrow. */}
+      <ScreenHeader
+        root
+        title={t("home.greeting", { name: user?.name ?? "" })}
+      />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -355,6 +364,14 @@ function MeterHero({
   const low = balance !== null && balance < LOW_BALANCE;
 
   /**
+   * Reads the same 28-day query as the rhythm card further down the screen, so
+   * this adds no request of its own. Called after `balance` because it takes
+   * one — unconditionally, like every hook here, since `balance` being null
+   * only changes what it returns, not whether it runs.
+   */
+  const runway = useBalanceRunway(balance, meter.id);
+
+  /**
    * A day the sweep never sampled is padded in at zero with `coverage: 0`, and
    * "you spent nothing" is not the same claim as "we did not look". Only a
    * measured day gets to print an amount.
@@ -381,7 +398,7 @@ function MeterHero({
 
         <View style={styles.meterTitle}>
           <Text variant="title3" numberOfLines={1}>
-            {meter.label ?? meter.customerNo}
+            {meter.label || info.data?.name || meter.customerNo}
           </Text>
 
           <CustomerNo value={meter.customerNo} />
@@ -456,6 +473,21 @@ function MeterHero({
           label={t("home.lastRecharge")}
           value={rechargeAge(daysSinceRecharge, t, formatNumber)}
           muted={daysSinceRecharge === null}
+        />
+
+        <View style={[styles.footerRule, { backgroundColor: colors.border }]} />
+
+        {/*
+          Last of the three, and the only one that is a forecast rather than a
+          record: it reads as the conclusion the two figures to its left build
+          towards — this is what you have been spending, so this is how long
+          what is left will hold.
+        */}
+        <HeroStat
+          icon={HourglassIcon}
+          label={t("home.lasts")}
+          value={runwayLabel(runway.days, t, formatNumber)}
+          muted={runway.days === null}
         />
       </View>
 
@@ -685,6 +717,31 @@ function daysSinceLastRecharge(
 }
 
 /**
+ * "~12 days" — how long the balance lasts, or a dash when it cannot be said.
+ *
+ * The tilde is doing real work: this is a projection off a 28-day average, not
+ * a reading, and a bare "12 days" would present it with the same confidence as
+ * the balance above it.
+ *
+ * Two ends are special. Zero floors to "under a day" rather than "~0 days",
+ * which reads as "already finished" when there is still an evening's worth
+ * left. And anything past `RUNWAY_MAX_DAYS` becomes "90+": past three months
+ * the projection is extrapolating far beyond the window it was measured over,
+ * and the extra digits would be false precision in a three-character column.
+ */
+function runwayLabel(
+  days: number | null,
+  t: ReturnType<typeof useI18n>["t"],
+  formatNumber: ReturnType<typeof useI18n>["formatNumber"],
+): string {
+  if (days === null) return t("home.notMeasured");
+  if (days === 0) return t("home.runwayUnderDay");
+  if (days > RUNWAY_MAX_DAYS)
+    return t("home.runwayLong", { days: formatNumber(RUNWAY_MAX_DAYS) });
+  return t("home.runwayDays", { days: formatNumber(days) });
+}
+
+/**
  * "6 days ago". Today and yesterday get words instead of a count — "0 days ago"
  * is a sentence no one says.
  */
@@ -769,6 +826,15 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: "row",
     alignItems: "stretch",
+    /*
+      Distributed rather than divided into equal thirds. Three `flex: 1`
+      columns size to the widest of them, so the shortest label — and the
+      strip's last stat with it — ended well short of the card's right edge
+      with a band of dead space after it. Spacing the row instead lets each
+      stat take only the width it needs and pins the outer two to the strip's
+      two ends, which is where the eye expects a footer to start and stop.
+    */
+    justifyContent: "space-between",
     // Out past the card's padding, so the strip meets its left and right edges
     // and reads as a base the card sits on rather than a box inside it.
     marginHorizontal: -HERO_PADDING,
@@ -777,7 +843,14 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
   },
   stat: {
-    flex: 1,
+    /*
+      Shrink but do not grow: the width comes from the content now, and
+      `space-between` spends what is left over. Shrinking still has to be
+      allowed — React Native defaults it off — or a long value on a narrow
+      phone would push the last stat past the card edge instead of ellipsising
+      into the room it has, which is what `numberOfLines={1}` promises.
+    */
+    flexShrink: 1,
     gap: 2,
   },
   statLabel: {
@@ -813,7 +886,16 @@ const styles = StyleSheet.create({
   // and whitespace alone lets the eye read them as one phrase.
   footerRule: {
     width: StyleSheet.hairlineWidth,
-    marginHorizontal: Spacing.md,
+    /*
+      No margin of its own. `space-between` divides the leftover width into
+      four equal gaps across the five children, so each rule already lands
+      centred between the two stats it separates — a margin here would only be
+      subtracted from the space the stats have to share.
+
+      Explicitly unshrinkable so that a crowded row eats into the stats, which
+      can ellipsise, rather than thinning a hairline into nothing.
+    */
+    flexShrink: 0,
   },
   emptyArt: {
     alignItems: "center",

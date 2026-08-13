@@ -53,7 +53,7 @@ const BKASH: RechargeMethod = {
   nameKey: "wallet.methods.bkash",
   logo: require("@/assets/images/recharge/bkash.webp") as ImageSource,
   brand: "#E2136E",
-  appUrl: "bkash://",
+  appUrl: "bKash://",
   androidPackage: "com.bKash.customerapp",
   // bKash Limited — iOS bundle `com.bKash.customerapp`.
   iosAppId: "1351183172",

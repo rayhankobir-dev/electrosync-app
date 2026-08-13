@@ -21,7 +21,10 @@ export function NotificationBell() {
       accessibilityRole="button"
       accessibilityLabel={
         unread > 0
-          ? `${t("notifications.open")}, ${t("notifications.unreadBadge", { count: unread })}`
+          ? // `formatNumber` for the same reason the badge below uses it: the
+            // count is read aloud, and a Bangla screen reader given "5" says it
+            // in the wrong script.
+            `${t("notifications.open")}, ${t("notifications.unreadBadge", { count: formatNumber(unread) })}`
           : t("notifications.open")
       }
       hitSlop={HitSlop / 4}

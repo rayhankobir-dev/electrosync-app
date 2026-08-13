@@ -1,21 +1,15 @@
 import {
-  ArrowLeft01Icon,
   BatteryCharging02Icon,
   ChartHistogramIcon,
   DashboardSpeed01Icon,
 } from "@hugeicons/core-free-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Children, Fragment, useMemo, useState, type ReactNode } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-} from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, View } from "react-native";
 
 import { isApiError } from "@/api/errors";
 import type { MeterType } from "@/api/types";
+import { BackButton } from "@/components/back-button";
 import { MeterArtwork } from "@/components/meter-artwork";
 import { MeterInfoCard } from "@/components/meter-info-card";
 import { NotificationBell } from "@/components/notification-bell";
@@ -24,12 +18,17 @@ import { Badge } from "@/components/ui/badge";
 import { Banner } from "@/components/ui/banner";
 import { Card, CardPadding } from "@/components/ui/card";
 import { DataTable, type Column } from "@/components/ui/data-table";
-import { Icon } from "@/components/ui/icon";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { ProgressRing } from "@/components/ui/progress-ring";
 import { Screen } from "@/components/ui/screen";
 import { Tabs, type TabOption } from "@/components/ui/tabs";
 import { Text } from "@/components/ui/text";
+import {
+  estimateRunwayDays,
+  monthlyDailyRate,
+  RUNWAY_MAX_DAYS,
+  useBalanceRunway,
+} from "@/hooks/use-analytics";
 import { useMeters } from "@/hooks/use-meters";
 import {
   useConsumption,
@@ -37,7 +36,7 @@ import {
   useRecharges,
 } from "@/hooks/use-utility-data";
 import { portalMonthNumber, useI18n } from "@/i18n";
-import { HitSlop, Spacing, useTheme } from "@/theme";
+import { Spacing, useTheme } from "@/theme";
 import type { UtilityMonthlyConsumption, UtilityRecharge } from "@/utility";
 import { utilityFor } from "@/utility";
 
@@ -46,7 +45,9 @@ type Tab = "recharges" | "consumption" | "info";
 const TABS: readonly Tab[] = ["recharges", "consumption", "info"];
 
 function isTab(value: unknown): value is Tab {
-  return typeof value === "string" && (TABS as readonly string[]).includes(value);
+  return (
+    typeof value === "string" && (TABS as readonly string[]).includes(value)
+  );
 }
 
 export default function MeterDetailScreen() {
@@ -117,14 +118,15 @@ export default function MeterDetailScreen() {
             gap: Spacing.md,
           }}
         >
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t("common.back")}
-            hitSlop={HitSlop / 4}
-            onPress={() => router.push("/(app)/meters")}
-          >
-            <Icon icon={ArrowLeft01Icon} color="textSecondary" />
-          </Pressable>
+          {/*
+            The same button `ScreenHeader` uses, so this page's arrow does not
+            read as a bare glyph next to every other screen's. A push rather than
+            `back()` is deliberate and unchanged — see `BackButton`.
+
+            No alignment style: this row centres its children, unlike the
+            header's, which pins them to the top and has to do the arithmetic.
+          */}
+          <BackButton onPress={() => router.push("/(app)/meters")} />
           <ProviderMark provider={meter.provider} size={42} />
           <View style={styles.topTitle}>
             <Text variant="title3" numberOfLines={1}>
@@ -166,6 +168,10 @@ export default function MeterDetailScreen() {
             recharges={recharges.data ?? []}
             loading={info.isPending}
             meterType={meter.type}
+            meterId={meter.id}
+            // Already loaded for the consumption tab, so the runway's fallback
+            // rate rides along on a query this screen was fetching anyway.
+            consumption={consumption.data ?? []}
           />
 
           <View
@@ -187,18 +193,38 @@ export default function MeterDetailScreen() {
   );
 }
 
+/**
+ * Days that fill the runway ring completely.
+ *
+ * A recharge cycle, not `RUNWAY_MAX_DAYS`. The question a prepaid user is
+ * actually asking is "does this see me through the month", so a month is the
+ * span the arc has to be read against — against 90 days a perfectly healthy
+ * three-week runway would draw a nearly empty ring and say something alarming
+ * that is not true. Runways longer than this clamp to a full ring inside
+ * `ProgressRing`, which is the honest reading: past a month, exactly how far
+ * past stops changing what you would do about it.
+ */
+const RUNWAY_RING_DAYS = 30;
+
 function BalanceRing({
   balance,
   recharges,
   loading,
   meterType,
+  meterId,
+  consumption,
 }: {
   balance: number | null;
   recharges: readonly UtilityRecharge[];
   loading: boolean;
   meterType: MeterType;
+  /** For the runway query, which is per meter rather than per account. */
+  meterId: string;
+  /** Stands in for the sampled burn rate until the sweep has enough history. */
+  consumption: readonly UtilityMonthlyConsumption[];
 }) {
-  const { t, formatCurrency } = useI18n();
+  const { t, formatCurrency, formatNumber } = useI18n();
+  const { colors } = useTheme();
   const reference = useMemo(() => {
     const latest = [...recharges].sort(
       (a, b) => b.rechargedDate - a.rechargedDate,
@@ -218,6 +244,40 @@ function BalanceRing({
         ? "warning"
         : "primary";
 
+  /**
+   * Reads the same 28-day query as the weekly rhythm card and the home hero, so
+   * this adds no request of its own — React Query hands all three one instance.
+   */
+  const runway = useBalanceRunway(balance, meterId);
+
+  /**
+   * The sampled rate when we have one, the portal's monthly average when we do
+   * not.
+   *
+   * Not a tidier `??` over the day counts, because the two differ in more than
+   * value: only the fallback is an estimate, and the ring has to say so. Falling
+   * back on the *rate* keeps one runway calculation and one place that decides
+   * which source answered.
+   */
+  const fallbackRate = monthlyDailyRate(consumption, new Date());
+  const estimated = runway.days === null && fallbackRate !== null;
+  const runwayDays = runway.days ?? estimateRunwayDays(balance, fallbackRate);
+
+  /**
+   * Urgency in days, which is not the same judgement the balance ring makes.
+   * ৳340 is a comfortable balance on a one-room flat and two days of light
+   * industry, and the runway is the only figure here that knows the difference —
+   * so it takes its colour from what it measures rather than inheriting `tone`.
+   */
+  const runwayTone =
+    runwayDays === null
+      ? "textTertiary"
+      : runwayDays <= 2
+        ? "danger"
+        : runwayDays < 7
+          ? "warning"
+          : "primary";
+
   return (
     <Card>
       <View style={styles.ringRow}>
@@ -227,7 +287,7 @@ function BalanceRing({
         <ProgressRing
           value={fraction ?? 0}
           color={tone}
-          size={104}
+          size={70}
           thickness={9}
         >
           {loading ? (
@@ -263,6 +323,81 @@ function BalanceRing({
           {fraction !== null ? (
             <Text variant="footnote" color="textSecondary">
               {t("details.ofLastRecharge")}
+            </Text>
+          ) : null}
+        </View>
+
+        {/* The same hairline the summary cells are divided by further down the
+            card, so the two readings are separated the way the figures below
+            them already are. */}
+        <View
+          style={[styles.ringDivider, { backgroundColor: colors.border }]}
+        />
+
+        {/*
+          What is left, read as time rather than as money — the one question the
+          balance beside it cannot answer on its own.
+
+          Same diameter and stroke as the balance ring on purpose: these are two
+          readings of one meter, not a headline and a footnote, and a smaller
+          circle here would rank them.
+        */}
+        <View style={styles.runwayBlock}>
+          {/*
+            The eyebrow the balance carries, over the ring rather than beside it —
+            a circle has no left edge to hang a label off.
+
+            Only this ring needs one. The balance ring is named by the column
+            immediately to its left, so labelling it too would print the same
+            word twice in one row. `home.lasts` rather than a `details` key of its
+            own: it is the same reading the home footer already calls this, and
+            one concept answering to two words across two screens is how they
+            drift apart.
+          */}
+          {/* <Text variant="caption" color="textTertiary" align="center">
+            {t("home.lasts").toUpperCase()}
+          </Text> */}
+
+          <ProgressRing
+            value={runwayDays === null ? 0 : runwayDays / RUNWAY_RING_DAYS}
+            color={runwayTone === "textTertiary" ? "primary" : runwayTone}
+            size={70}
+            thickness={9}
+          >
+            {runway.isPending && runwayDays === null ? (
+              <ActivityIndicator />
+            ) : (
+              <>
+                <Text variant="title3" numeric color={runwayTone}>
+                  {runwayDays === null
+                    ? "—"
+                    : `${estimated ? "~" : ""}${formatNumber(Math.min(runwayDays, RUNWAY_MAX_DAYS))}${runwayDays > RUNWAY_MAX_DAYS ? "+" : ""}`}
+                </Text>
+                <Text variant="micro" color="textTertiary">
+                  {t("details.days")}
+                </Text>
+              </>
+            )}
+          </ProgressRing>
+        </View>
+        <View style={styles.ringMeta}>
+          <Text variant="caption" color="textTertiary">
+            {t("details.remainDesc").toUpperCase()}
+          </Text>
+
+          <Text
+            variant="title1"
+            numeric
+            color={tone === "primary" ? "text" : tone}
+          >
+            {runwayDays === null
+              ? "—"
+              : `${estimated ? "~" : ""}${formatNumber(Math.min(runwayDays, RUNWAY_MAX_DAYS))}${runwayDays > RUNWAY_MAX_DAYS ? "+" : ""}`}{" "}
+            {t("details.days")}
+          </Text>
+          {fraction !== null ? (
+            <Text variant="footnote" color="textSecondary">
+              {t("details.remain")}
             </Text>
           ) : null}
         </View>
@@ -367,6 +502,7 @@ function RechargesPanel({ query }: { query: ReturnType<typeof useRecharges> }) {
       render: (row) => (
         <Badge
           label={row.rechargeStatus}
+          align="center"
           tone={
             row.rechargeStatus.toLowerCase() === "success"
               ? "success"
@@ -641,14 +777,20 @@ function SummaryCell({
 }) {
   return (
     <View style={styles.summaryCell}>
-      <Text variant="caption" color="textTertiary">
+      {/*
+        Centred per line, not per block: `alignItems` on the cell would centre a
+        wrapped label as one shape and leave its second line hugging the left
+        edge. These labels do wrap — see above — so the alignment has to live on
+        the text.
+      */}
+      <Text variant="caption" color="textTertiary" align="center">
         {label.toUpperCase()}
       </Text>
-      <Text variant="bodyMedium" numeric color={tone}>
+      <Text variant="bodyMedium" numeric color={tone} align="center">
         {value}
       </Text>
       {count ? (
-        <Text variant="footnote" color="textTertiary" numeric>
+        <Text variant="footnote" color="textTertiary" numeric align="center">
           {count}
         </Text>
       ) : null}
@@ -683,6 +825,24 @@ const styles = StyleSheet.create({
   ringMeta: {
     flex: 1,
     gap: 2,
+  },
+  runwayBlock: {
+    // The ring is a fixed 70 wide, so the label centres over it rather than the
+    // label's own width deciding where the circle sits.
+    alignItems: "center",
+    // Matches the gap between the balance's own eyebrow and its figure, so the
+    // two labels sit the same distance from what they name.
+    gap: 2,
+  },
+  ringDivider: {
+    width: StyleSheet.hairlineWidth,
+    /**
+     * Overrides the row's `alignItems: "center"`, so the rule runs the height of
+     * the tallest thing beside it — the rings — rather than collapsing to no
+     * height at all. Same shape as `summaryDivider`; kept separate because the
+     * two live in rows with different alignment and would fight over it.
+     */
+    alignSelf: "stretch",
   },
   panel: {
     gap: Spacing.lg,

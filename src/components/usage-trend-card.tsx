@@ -12,7 +12,7 @@ import { Spacing } from "@/theme";
 const FULL_COVERAGE = 0.99;
 
 export function UsageTrendCard({ meterId }: { meterId?: string }) {
-  const { t, locale } = useI18n();
+  const { t, formatCurrency } = useI18n();
   const { points, total, changeRatio, isLoading, isError } =
     useUsageTrend(meterId);
 
@@ -69,7 +69,16 @@ export function UsageTrendCard({ meterId }: { meterId?: string }) {
       </Text>
 
       <View style={styles.headline}>
-        <Text variant="title1" numeric>৳{formatMoney(total, locale)}</Text>
+        {/*
+          `formatCurrency`, not `Intl.NumberFormat("bn-BD")`. Intl's digit
+          output depends on the JS engine shipping ICU data for the locale,
+          which Hermes does not guarantee — so the app's largest figure was
+          betting on it while every other number used the app's own localiser.
+          This also drops a hardcoded ৳ that duplicated `common.currencySymbol`.
+        */}
+        <Text variant="title1" numeric>
+          {formatCurrency(total, 0)}
+        </Text>
         {changeRatio !== null ? <Delta ratio={changeRatio} /> : null}
       </View>
 
@@ -94,10 +103,12 @@ export function UsageTrendCard({ meterId }: { meterId?: string }) {
  * prepaid meter.
  */
 function Delta({ ratio }: { ratio: number }) {
-  const { t } = useI18n();
+  const { t, formatNumber } = useI18n();
 
   const up = ratio > 0;
-  const percent = Math.abs(Math.round(ratio * 100));
+  // Through `formatNumber` rather than interpolated raw: a bare `{percent}` is
+  // whatever JS stringifies, which is Latin digits in every locale.
+  const percent = formatNumber(Math.abs(Math.round(ratio * 100)));
 
   return (
     <View style={styles.delta}>
@@ -124,12 +135,6 @@ function weekdayLabel(
   const key = `analytics.weekday.${isoDay === 0 ? 7 : isoDay}` as never;
 
   return t(key);
-}
-
-function formatMoney(value: number, locale: string): string {
-  return new Intl.NumberFormat(locale === "bn" ? "bn-BD" : "en-US", {
-    maximumFractionDigits: 0,
-  }).format(Math.round(value));
 }
 
 const styles = StyleSheet.create({

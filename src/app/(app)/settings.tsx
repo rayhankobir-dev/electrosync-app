@@ -5,6 +5,7 @@ import {
   ChartHistogramIcon,
   FlashIcon,
   LanguageSquareIcon,
+  LockPasswordIcon,
   Logout01Icon,
   Mail01Icon,
   Message01Icon,
@@ -13,6 +14,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react-native";
 import Constants from "expo-constants";
+import { useRouter } from "expo-router";
 import { useState, type ReactNode } from "react";
 import {
   Alert,
@@ -57,6 +59,7 @@ import { Spacing, useTheme } from "@/theme";
 
 export default function SettingsScreen() {
   const { t } = useI18n();
+  const router = useRouter();
   const { mode, setMode, scheme } = useTheme();
   const { signOut, user } = useSession();
 
@@ -113,6 +116,16 @@ export default function SettingsScreen() {
 
       <AlertChannels />
 
+      <Section icon={LockPasswordIcon} label={t("settings.security")}>
+        <ListRow
+          icon={LockPasswordIcon}
+          label={t("settings.changePassword")}
+          detail={t("settings.changePasswordHint")}
+          chevron
+          onPress={() => router.push("/change-password")}
+        />
+      </Section>
+
       <View style={styles.block}>
         <ListGroup>
           <ListRow
@@ -140,22 +153,35 @@ export default function SettingsScreen() {
   );
 }
 
-const DEVELOPER = { name: "coderbrix.com", url: "https://coderbrix.com" };
+const DEVELOPER = {
+  name: "Rayhan Kobir",
+  url: "https://rayhankobir.vercel.app",
+};
 
 /**
- * The whole line is the target, not just the domain inside it: splitting the
- * sentence so only "coderbrix.com" responds would leave a tap target a few
+ * The whole line is the target, not just the name inside it: splitting the
+ * sentence so only the developer's name responds would leave a tap target a few
  * characters wide at footnote size, and the credit reads as one phrase anyway.
  */
 function DeveloperCredit() {
   const { t } = useI18n();
   const toast = useToast();
 
+  /**
+   * Hover has to be tracked in state rather than read from the style callback:
+   * `PressableStateCallbackType` carries only `pressed`, so `hovered` is not
+   * something the render prop can hand over. `onHoverIn`/`onHoverOut` are the
+   * supported route, and they simply never fire on a touch screen.
+   */
+  const [hovered, setHovered] = useState(false);
+
   return (
     <Pressable
       accessibilityRole="link"
       accessibilityLabel={t("common.developedBy", { company: DEVELOPER.name })}
       hitSlop={Spacing.sm}
+      onHoverIn={() => setHovered(true)}
+      onHoverOut={() => setHovered(false)}
       // Rejects when the device has nothing registered for https — rare, but a
       // credit that appears to do nothing on tap is worse than one that says why.
       onPress={() =>
@@ -164,9 +190,22 @@ function DeveloperCredit() {
         )
       }
     >
-      <Text variant="caption" color="textTertiary" align="center">
-        {t("common.developedBy", { company: DEVELOPER.name })}
-      </Text>
+      {/*
+        Pressed counts as well as hovered, and not as an extra flourish: hover
+        does not exist on the phones this app is mostly read on, so keying the
+        highlight to hover alone would leave the credit looking inert on every
+        device that matters. The two states mean the same thing here — the
+        pointer, whatever kind it is, is on the link.
+      */}
+      {({ pressed }) => (
+        <Text
+          variant="caption"
+          color={hovered || pressed ? "primary" : "textTertiary"}
+          align="center"
+        >
+          {t("common.developedBy", { company: DEVELOPER.name })}
+        </Text>
+      )}
     </Pressable>
   );
 }
@@ -251,32 +290,43 @@ function AlertChannels() {
   const loading = !settings;
 
   /**
-   * The account's own number, if it has one. Both messaging channels fall back
-   * to it, so a user who signed up with a mobile never has to type it again —
-   * the field below only appears when there is nothing to fall back to.
+   * The account's own number, if it has one. SMS falls back to it, so a user who
+   * signed up with a mobile never has to type it again — the field below only
+   * appears when there is nothing to fall back to. Still passed as a prop rather
+   * than read inside `MessageChannel`: WhatsApp will want the same fallback when
+   * it returns, and a second channel should not have to rediscover it.
    */
   const profileNumber = user?.mobile?.trim() ? user.mobile.trim() : null;
 
   return (
     <Section icon={Alert02Icon} label={t("settings.alertChannels")}>
-      <MessageChannel
+      {/*
+        Off by design, not by preference: nothing on the server delivers over
+        WhatsApp yet, so the switch would promise a message that never arrives.
+
+        Shown greyed rather than removed. A channel that disappears and comes
+        back later reads as a bug to anyone who saw it before, and the row is
+        the only place that can say *why* it cannot be turned on.
+
+        Not a `MessageChannel`, for the same reason email is not: that component
+        exists to collect a number and write it back, and this row does neither.
+        Restoring it means putting the `MessageChannel` back, not deleting a flag.
+      */}
+      <ListRow
         icon={WhatsappIcon}
-        label="settings.whatsappAlerts"
-        enabled={settings?.whatsappAlerts ?? false}
-        number={settings?.whatsappNumber ?? null}
-        profileNumber={profileNumber}
-        loading={loading}
-        // The hint rides on the first row only. Repeating it under each switch
-        // would say the same sentence three times running.
-        hint={t("settings.alertChannelsHint")}
-        onToggle={(next) =>
-          save({ whatsappAlerts: next }, toggled("settings.whatsappAlerts", next))
-        }
-        onNumber={(next) =>
-          save(
-            { whatsappNumber: next },
-            t("settings.channelNumberSaved", { contact: next }),
-          )
+        label={t("settings.whatsappAlerts")}
+        detail={t("settings.channelComingSoon")}
+        // Greys the whole row, switch included — see `ListRow`.
+        disabled
+        trailing={
+          <Switch
+            // Hardcoded off, not read from `settings`: an account that turned
+            // this on before delivery was pulled would otherwise show an on
+            // switch for a channel that sends nothing.
+            value={false}
+            disabled
+            accessibilityLabel={t("settings.whatsappAlerts")}
+          />
         }
       />
 
@@ -287,6 +337,11 @@ function AlertChannels() {
         number={settings?.smsNumber ?? null}
         profileNumber={profileNumber}
         loading={loading}
+        // The hint rides on the first *live* row only — repeating it under each
+        // switch would say the same sentence twice running. It sits here rather
+        // than on WhatsApp above because that row spends its detail line
+        // explaining its own state, which would drop the hint from the section.
+        hint={t("settings.alertChannelsHint")}
         onToggle={(next) =>
           save({ smsAlerts: next }, toggled("settings.smsAlerts", next))
         }
@@ -308,7 +363,7 @@ function AlertChannels() {
         label={t("settings.emailAlerts")}
         detail={
           user?.email
-            ? t("settings.channelUsingProfile", { contact: user.email })
+            ? t("settings.emailChannelProfile", { contact: user.email })
             : undefined
         }
         disabled={loading}
@@ -375,7 +430,7 @@ function MessageChannel({
         label={t(label)}
         /**
          * Three states, in the order they matter: where it is going, what is
-         * missing before it can go anywhere, and — on the first row only — what
+         * missing before it can go anywhere, and — where a hint is given — what
          * the section is for.
          */
         detail={
@@ -715,9 +770,13 @@ function ThresholdRow({
   }
 
   const options = [
+    // Every preset is a figure — an amount or a percentage — so it takes the
+    // numeral family. "Other" names a choice rather than a value and stays in
+    // the interface font beside them.
     ...presets.map((preset) => ({
       value: String(preset),
       label: format(preset),
+      numeric: true,
     })),
     { value: OTHER, label: t("settings.thresholdOther") },
   ];

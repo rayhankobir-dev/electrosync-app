@@ -5,7 +5,14 @@ import {
 } from "@hugeicons/core-free-icons";
 import { StyleSheet, View } from "react-native";
 
-import { Radius, Spacing, useTheme, withAlpha, type ColorName } from "@/theme";
+import {
+  Radius,
+  Spacing,
+  useTheme,
+  withAlpha,
+  type ColorName,
+  type TypeVariant,
+} from "@/theme";
 
 import { Icon } from "./icon";
 import { Text } from "./text";
@@ -90,18 +97,93 @@ export function ToastCard({
         {/* `subhead`, not `body`: a toast is glanced at over the top of whatever
             the user was reading, so it should not compete with the page's own
             body text for weight. */}
-        <Text variant="subhead" numberOfLines={2}>
+        <Copy variant="subhead" numberOfLines={2}>
           {title}
-        </Text>
+        </Copy>
 
         {description ? (
-          <Text variant="footnote" color="textSecondary" numberOfLines={2}>
+          <Copy variant="footnote" color="textSecondary" numberOfLines={2}>
             {description}
-          </Text>
+          </Copy>
         ) : null}
       </View>
     </View>
   );
+}
+
+/**
+ * A number inside a sentence: digits, the separators *between* digits, and a
+ * leading taka sign so an amount stays one visual unit.
+ *
+ * Bangla numerals are matched as well as Latin ones because that is what
+ * actually arrives here — every figure in a toast has already been through
+ * `formatNumber`/`formatCurrency`, so under `bn` the string holds ০-৯ before it
+ * reaches this component.
+ *
+ * The separator has to be *followed* by a digit to be part of the run. Without
+ * that, the full stop ending "You'll be alerted below ৳১০০." would be pulled
+ * into the number and set in the numeral family, leaving the sentence's own
+ * punctuation in the wrong typeface.
+ */
+const NUMBER_RUN = /৳?[\d০-৯]+(?:[.,:][\d০-৯]+)*/g;
+
+/**
+ * Toast copy with its numbers in the numeral family and its words left alone.
+ *
+ * A toast is prose that happens to quote a figure — "You'll be alerted below
+ * ৳১০০" — so it cannot simply be flagged `numeric` the way a table cell can:
+ * that switches the whole string to Li Ador Noirrit and would set the Bangla
+ * words in it in a family the rest of the app's prose never uses. Splitting the
+ * string means only the digits change, which is the distinction `numeric` was
+ * drawn for in the first place.
+ *
+ * `color` is threaded onto the nested runs on purpose. `Text` always writes a
+ * colour, so a nested run that omitted it would silently reset the description's
+ * `textSecondary` back to full-strength `text` — visible as a two-tone sentence.
+ */
+function Copy({
+  variant,
+  color,
+  numberOfLines,
+  children,
+}: {
+  variant: TypeVariant;
+  color?: ColorName;
+  numberOfLines?: number;
+  children: string;
+}) {
+  return (
+    <Text variant={variant} color={color} numberOfLines={numberOfLines}>
+      {splitNumbers(children).map((run, index) =>
+        typeof run === "string" ? (
+          run
+        ) : (
+          <Text key={index} variant={variant} color={color} numeric>
+            {run.number}
+          </Text>
+        ),
+      )}
+    </Text>
+  );
+}
+
+/** Alternating prose and number runs, in order, for `Copy` to render. */
+function splitNumbers(text: string): (string | { number: string })[] {
+  const runs: (string | { number: string })[] = [];
+  let cursor = 0;
+
+  // `matchAll` rather than `exec` in a loop: the regex is module-level and
+  // therefore shared, and a stateful `lastIndex` left behind by one toast would
+  // make the next one start matching from the middle of its own string.
+  for (const match of text.matchAll(NUMBER_RUN)) {
+    const start = match.index;
+    if (start > cursor) runs.push(text.slice(cursor, start));
+    runs.push({ number: match[0] });
+    cursor = start + match[0].length;
+  }
+
+  if (cursor < text.length) runs.push(text.slice(cursor));
+  return runs;
 }
 
 const styles = StyleSheet.create({

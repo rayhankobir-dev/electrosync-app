@@ -91,9 +91,9 @@ function AppTabs() {
         {/* Reached from the header bell, not the tab bar. */}
         <Tabs.Screen name="notifications" options={{ href: null }} />
 
-        {/* Declared before settings so the bar splits two tabs to each side of
-            the action button — `AppTabBar` divides the visible tabs in
-            declaration order. */}
+        {/* Reached from the security row on settings. */}
+        <Tabs.Screen name="change-password" options={{ href: null }} />
+
         <Tabs.Screen
           name="wallet"
           options={{

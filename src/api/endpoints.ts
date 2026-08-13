@@ -1,6 +1,7 @@
 import type { ApiClient } from './client';
 import type {
   AddMeterPayload,
+  ChangePasswordPayload,
   ForgotPasswordPayload,
   IssuedToken,
   LoginPayload,
@@ -60,6 +61,18 @@ export function createEndpoints(client: ApiClient) {
           method: 'POST',
           body: payload,
           anonymous: true,
+        }),
+
+      /**
+       * Authenticated, unlike the reset pair above — this is the flow for a user
+       * who *knows* their password. A wrong `currentPassword` comes back as 400,
+       * not 401, precisely so it does not trip the client's session-clearing
+       * 401 handler and sign the user out over a typo.
+       */
+      changePassword: (payload: ChangePasswordPayload) =>
+        client.request<void>('/auth/change-password', {
+          method: 'POST',
+          body: payload,
         }),
 
       me: () => client.request<UserProfile>('/auth/me'),

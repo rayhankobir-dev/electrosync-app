@@ -57,6 +57,16 @@ export type ResetPasswordPayload = {
   password: string;
 };
 
+/**
+ * For a user who is already signed in and knows their password. The server
+ * answers 204 rather than a token: nothing about the session changes, including
+ * the token that made the request.
+ */
+export type ChangePasswordPayload = {
+  currentPassword: string;
+  newPassword: string;
+};
+
 /** What the meter is for. Presentation only — nothing routes on it. */
 export type MeterType = 'HOME' | 'OFFICE' | 'INDUSTRY';
 

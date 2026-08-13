@@ -19,7 +19,7 @@ import {
   toLatinDigits,
 } from "@/lib/validation";
 import { useSession } from "@/session";
-import { HitSlop, Spacing } from "@/theme";
+import { HitSlop, Spacing, type ColorName } from "@/theme";
 
 /**
  * Mirrors `RESEND_COOLDOWN_SECONDS` in the backend's `password-reset.policy.ts`.
@@ -36,7 +36,7 @@ type FieldErrors = {
 };
 
 export default function ResetPasswordScreen() {
-  const { t, formatNumber } = useI18n();
+  const { t } = useI18n();
   const { api, resetPassword } = useSession();
   const toast = useToast();
 
@@ -168,6 +168,7 @@ export default function ResetPasswordScreen() {
           value={code}
           onChangeText={setCode}
           error={fieldErrors.code}
+          numeric
           keyboardType="number-pad"
           // `oneTimeCode` lets iOS offer the code from the notification banner,
           // saving the user a trip to their mail app.
@@ -224,18 +225,19 @@ export default function ResetPasswordScreen() {
           onPress={() => void handleResend()}
           style={styles.resend}
         >
-          <Text
-            variant="footnote"
-            color={resendDisabled ? "textTertiary" : "primary"}
-          >
-            {cooldown > 0
-              ? t("auth.resetPassword.resendIn", {
-                  // Through `formatNumber` so the countdown reads ৫৯ in Bangla
-                  // rather than switching scripts mid-sentence.
-                  seconds: formatNumber(cooldown, 0),
-                })
-              : t("auth.resetPassword.resend")}
-          </Text>
+          {cooldown > 0 ? (
+            <ResendCountdown
+              seconds={cooldown}
+              color={resendDisabled ? "textTertiary" : "primary"}
+            />
+          ) : (
+            <Text
+              variant="footnote"
+              color={resendDisabled ? "textTertiary" : "primary"}
+            >
+              {t("auth.resetPassword.resend")}
+            </Text>
+          )}
         </Pressable>
       </View>
 
@@ -247,6 +249,55 @@ export default function ResetPasswordScreen() {
         </Link>
       </View>
     </Screen>
+  );
+}
+
+/**
+ * Placeholder standing in for the seconds while the sentence is interpolated, so
+ * the two halves either side of the figure can be recovered.
+ *
+ * A private-use codepoint, written as an escape rather than pasted in: nothing
+ * in a translation bundle can contain it, which makes the split unambiguous,
+ * and keeping it out of the file as a literal stops editors and diff tools from
+ * treating the source as binary.
+ */
+const SECONDS_SLOT = "\uE000";
+
+/**
+ * The resend countdown, with the numeral family on the seconds only.
+ *
+ * The line is one translated sentence — "{{seconds}} সেকেন্ড পরে আবার পাঠান" —
+ * so marking the outer `Text` numeric would set the Bangla words in it too.
+ * Splitting the interpolated string lets the figure alone change family while
+ * the copy around it stays in the interface font, which is how every other
+ * number-inside-a-sentence on the screen already reads.
+ *
+ * Both `Text`s are `footnote` in the same locale, so they resolve to an
+ * identical line height and the nested run cannot shift the baseline.
+ */
+function ResendCountdown({
+  seconds,
+  color,
+}: {
+  seconds: number;
+  color: ColorName;
+}) {
+  const { t, formatNumber } = useI18n();
+
+  // A template missing the placeholder yields a single segment, leaving `after`
+  // undefined — which renders as nothing rather than throwing.
+  const [before, after] = t("auth.resetPassword.resendIn", {
+    seconds: SECONDS_SLOT,
+  }).split(SECONDS_SLOT);
+
+  return (
+    <Text variant="footnote" color={color}>
+      {before}
+      <Text variant="footnote" color={color} numeric>
+        {formatNumber(seconds, 0)}
+      </Text>
+      {after}
+    </Text>
   );
 }
 

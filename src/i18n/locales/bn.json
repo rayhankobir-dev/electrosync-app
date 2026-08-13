@@ -13,7 +13,7 @@
     "loading": "লোড হচ্ছে",
     "optional": "ঐচ্ছিক",
     "currencySymbol": "৳",
-    "developedBy": "ডেভেলপ করেছে {{company}}",
+    "developedBy": "ডেভেলপার: {{company}}",
     "linkFailed": "লিংকটি খোলা যায়নি"
   },
   "auth": {
@@ -53,6 +53,19 @@
       "resent": "নতুন একটি কোড পাঠানো হচ্ছে।",
       "success": "পাসওয়ার্ড বদলে গেছে। আপনি সাইন ইন করেছেন।"
     },
+    "changePassword": {
+      "title": "পাসওয়ার্ড বদলান",
+      "subtitle": "আগে বর্তমান পাসওয়ার্ডটি দিন, এরপর নতুন যেটি ব্যবহার করতে চান।",
+      "currentPassword": "বর্তমান পাসওয়ার্ড",
+      "currentPlaceholder": "এখন যেটি ব্যবহার করছেন",
+      "newPassword": "নতুন পাসওয়ার্ড",
+      "confirmPassword": "নতুন পাসওয়ার্ড আবার দিন",
+      "confirmPlaceholder": "আরেকবার লিখুন",
+      "submit": "পাসওয়ার্ড হালনাগাদ করুন",
+      "success": "আপনার পাসওয়ার্ড হালনাগাদ হয়েছে",
+      "signedInNote": "এই ডিভাইসে এবং আগে থেকে সাইন ইন করা অন্য ডিভাইসেও আপনি সাইন ইন থাকবেন।",
+      "forgot": "বর্তমান পাসওয়ার্ড মনে নেই? সাইন আউট করে সাইন ইন পাতার “পাসওয়ার্ড ভুলে গেছেন?” ব্যবহার করুন।"
+    },
     "fields": {
       "name": "পুরো নাম",
       "namePlaceholder": "মোঃ আব্দুর রহমান",
@@ -73,7 +86,9 @@
       "codeRequired": "ইমেইলে পাওয়া কোডটি লিখুন।",
       "codeInvalid": "কোডটি ৬ সংখ্যার।",
       "confirmRequired": "নতুন পাসওয়ার্ডটি আবার লিখুন।",
-      "passwordMismatch": "পাসওয়ার্ড দুটি মিলছে না।"
+      "passwordMismatch": "পাসওয়ার্ড দুটি মিলছে না।",
+      "currentPasswordRequired": "বর্তমান পাসওয়ার্ডটি লিখুন।",
+      "passwordUnchanged": "নতুন পাসওয়ার্ডটি বর্তমানটির থেকে আলাদা হতে হবে।"
     },
     "signOut": "সাইন আউট",
     "signOutConfirm": "ইলেক্ট্রোসিঙ্ক থেকে সাইন আউট করবেন?"
@@ -97,12 +112,16 @@
     "feeder": "ফিডার",
     "meterType": "মিটারের ধরন",
     "installedAt": "স্থাপনের তারিখ",
-    "yesterday": "গতকাল",
+    "yesterday": "গতকালের ব্যবহার",
     "lastRecharge": "শেষ রিচার্জ",
     "rechargeToday": "আজ",
     "rechargeYesterday": "গতকাল",
     "rechargeDaysAgo": "{{days}} দিন আগে",
     "rechargeNone": "এখনো হয়নি",
+    "lasts": "চলবে",
+    "runwayUnderDay": "১ দিনের কম",
+    "runwayDays": "~{{days}} দিন",
+    "runwayLong": "{{days}}+ দিন",
     "notMeasured": "হিসাব হয়নি",
     "supplyOkTitle": "কোনো সমস্যা নেই",
     "supplyOkBody": "আপনার বিদ্যুৎ চালু আছে।",
@@ -114,8 +133,8 @@
     "copy": "কাস্টমার নম্বর কপি করুন"
   },
   "analytics": {
-    "trendTitle": "এই সপ্তাহ",
-    "rhythmTitle": "সাপ্তাহিক ছন্দ",
+    "trendTitle": "এই সপ্তাহর ব্যবহার",
+    "rhythmTitle": "সাপ্তাহিক ব্যবহার পরিসংখ্যান",
     "rhythmSubtitle": "দৈনিক গড় খরচ, শেষ {{days}} দিন",
     "vsLastWeek": "গত সপ্তাহের তুলনায়",
     "partialNote": "ড্যাশ চিহ্নিত দিনগুলোর পূর্ণ তথ্য নেই",
@@ -186,18 +205,21 @@
       "closing": "গত মাসের অবশিষ্ট"
     },
     "kwh": "ইউনিট",
+    "days": "দিন",
     "info": "তথ্য",
     "avgSpend": "গড় খরচ",
     "avgUnits": "গড় ইউনিট",
-    "lastClosing": "গত মাসের অবশিষ্ট"
+    "lastClosing": "গত মাসের অবশিষ্ট",
+    "remainDesc": "এটি সম্ভাব্য মাত্র",
+    "remain": "বর্তমান ব্যালেন্স দিয়ে চলবে"
   },
   "notifications": {
     "title": "নোটিফিকেশন",
     "channelName": "ব্যালেন্স ও রিচার্জ সতর্কতা",
     "open": "নোটিফিকেশন খুলুন",
     "unreadBadge": "{{count}}টি অপঠিত",
-    "emptyTitle": "এখানে এখনও কিছু নেই",
-    "emptyBody": "ব্যালেন্স ও রিচার্জ সংক্রান্ত বার্তা এখানে দেখা যাবে।",
+    "emptyTitle": "কোন নোটিফিকেশন পাওয়া যায়নি",
+    "emptyBody": "ব্যালেন্স ও রিচার্জ সংক্রান্ত নোটিফিকেশন এখানে দেখা যাবে।",
     "justNow": "এইমাত্র",
     "minutesAgo": "{{count}} মিনিট আগে",
     "hoursAgo": "{{count}} ঘণ্টা আগে",
@@ -216,7 +238,7 @@
     "clearAllConfirm": "সব নোটিফিকেশন মুছে ফেলবেন?",
     "clearAllBody": "এগুলো এই তালিকা থেকে সরে যাবে। আর কিছু বদলাবে না।",
     "clearAllFailed": "নোটিফিকেশন মোছা যায়নি",
-    "noMatchesTitle": "কিছু মেলেনি",
+    "noMatchesTitle": "নোটিফিকেশন পাওয়া যায়নি",
     "noMatchesBody": "আপনার বেছে নেওয়া ফিল্টারে কোনো নোটিফিকেশন নেই।",
     "clearFilter": "ফিল্টার মুছুন"
   },
@@ -227,6 +249,9 @@
     "emailFixed": "ইমেইল দিয়েই আপনি সাইন ইন করেন, তাই এটি এখান থেকে বদলানো যাবে না।",
     "verified": "যাচাই করা",
     "profileSaved": "আপনার তথ্য সংরক্ষণ হয়েছে",
+    "security": "নিরাপত্তা",
+    "changePassword": "পাসওয়ার্ড বদলান",
+    "changePasswordHint": "নতুন পাসওয়ার্ড দিতে বর্তমান পাসওয়ার্ডটি লাগবে।",
     "appearance": "থিম",
     "theme": "থিম",
     "themeLight": "লাইট",
@@ -248,7 +273,7 @@
     "usageAnomalyAlerts": "অস্বাভাবিক ব্যবহারের সতর্কতা",
     "usageAnomalyHint": "গত দুই সপ্তাহে এই মিটারের নিজের গড়ের সঙ্গে প্রতিদিনের ব্যবহার তুলনা করা হয়।",
     "usageAnomalyThreshold": "কত শতাংশ বেশি হলে জানাব",
-    "usageAnomalySaved": "স্বাভাবিকের চেয়ে {{percent}}% বেশি হলে জানানো হবে।",
+    "usageAnomalySaved": "স্বাভাবিকের চেয়ে {{percent}}% বেশি বিদ্যুৎ ব্যবহার হলে জানানো হবে।",
     "thresholdOther": "অন্য",
     "thresholdCustom": "নিজের পরিমাণ",
     "thresholdRange": "{{min}} থেকে {{max}} এর মধ্যে একটি পূর্ণ সংখ্যা লিখুন।",
@@ -257,16 +282,18 @@
     "thresholdSaved": "{{amount}} এর নিচে নামলে জানানো হবে",
     "saveFailed": "পরিবর্তনটি সংরক্ষণ করা যায়নি",
     "alertChannels": "অ্যালার্ট চ্যানেল",
-    "alertChannelsHint": "অ্যাপের নোটিফিকেশনের পাশাপাশি ব্যালেন্স কম বা রিচার্জের অ্যালার্ট কোথায় পাবেন।",
+    "alertChannelsHint": "ব্যালেন্স কম বা রিচার্জের অ্যালার্ট এসএমএসে পাবেন।",
     "whatsappAlerts": "হোয়াটসঅ্যাপ",
     "smsAlerts": "এসএমএস",
     "emailAlerts": "ইমেইল",
     "channelNumber": "অ্যালার্টের নম্বর",
     "channelNumberHint": "এই নম্বরে অ্যালার্ট পাঠানো হবে।",
     "channelNumberInvalid": "সঠিক ফোন নম্বর দিন।",
+    "emailChannelProfile": "{{contact}} এই ইমেইলে পাঠানো হবে",
     "channelUsingProfile": "{{contact}} নম্বরে পাঠানো হবে",
     "channelNumberSaved": "{{contact}} নম্বরে অ্যালার্ট যাবে",
-    "channelNeedsNumber": "অ্যালার্ট পেতে একটি নম্বর দিন।"
+    "channelNeedsNumber": "অ্যালার্ট পেতে একটি নম্বর দিন।",
+    "channelComingSoon": "শীঘ্রই আসছে।"
   },
   "errors": {
     "network": "সার্ভারে সংযোগ করা যাচ্ছে না। ইন্টারনেট সংযোগ দেখুন।",
@@ -280,6 +307,7 @@
     "invalidCredentials": "ইমেইল বা পাসওয়ার্ড ভুল।",
     "emailTaken": "এই ইমেইলে ইতিমধ্যে একটি অ্যাকাউন্ট আছে।",
     "invalidResetCode": "কোডটি ভুল বা বাতিল হয়ে গেছে। নতুন কোড নিন।",
+    "invalidCurrentPassword": "এটি আপনার বর্তমান পাসওয়ার্ড নয়।",
     "tooManyRequests": "অনেকবার চেষ্টা হয়েছে। কিছুক্ষণ পরে আবার চেষ্টা করুন।"
   },
   "wallet": {

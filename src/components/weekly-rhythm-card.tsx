@@ -20,7 +20,7 @@ import { Spacing } from "@/theme";
  * spent nothing is entitled to see that stated rather than inferred from a gap.
  */
 export function WeeklyRhythmCard({ meterId }: { meterId?: string }) {
-  const { t } = useI18n();
+  const { t, formatNumber } = useI18n();
   const { points, hasEnoughHistory, isLoading, isError } =
     useWeekdayRhythm(meterId);
 
@@ -47,7 +47,13 @@ export function WeeklyRhythmCard({ meterId }: { meterId?: string }) {
         {t("analytics.rhythmTitle")}
       </Text>
       <Text variant="micro" color="textTertiary">
-        {t("analytics.rhythmSubtitle", { days: RHYTHM_WINDOW_DAYS })}
+        {/* Through `formatNumber`, not interpolated raw: `t` substitutes with a
+            bare `String(...)`, so a number handed straight over renders "28"
+            mid-sentence under `bn` while every other figure on the screen reads
+            ২৮. */}
+        {t("analytics.rhythmSubtitle", {
+          days: formatNumber(RHYTHM_WINDOW_DAYS),
+        })}
       </Text>
 
       <View style={styles.chart}>

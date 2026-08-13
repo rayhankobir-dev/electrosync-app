@@ -9,7 +9,16 @@ import {
   type TextInputProps,
 } from 'react-native';
 
-import { fontFamily, HitSlop, Radius, Spacing, TypeScale, useTheme } from '@/theme';
+import { useI18n } from '@/i18n';
+import {
+  fontFamily,
+  HitSlop,
+  numericFontFamily,
+  Radius,
+  Spacing,
+  TypeScale,
+  useTheme,
+} from '@/theme';
 
 import { Icon } from './icon';
 import { Text } from './text';
@@ -31,6 +40,16 @@ export type TextFieldProps = Omit<TextInputProps, 'style'> & {
    * cases means the user has to read every one to find the few that matter.
    */
   required?: boolean;
+  /**
+   * The field holds a figure rather than words — a reset code, an amount, a
+   * threshold — so under `bn` what is typed is set in the Bangla numeral family.
+   *
+   * Worth having on an input and not just on read-only text: a Bangla user can
+   * type Bengali digits into these fields (`toLatinDigits` in `lib/validation`
+   * exists precisely to normalise that), so the digits being entered are the
+   * same glyphs the rest of the app renders in that family.
+   */
+  numeric?: boolean;
 };
 
 export function TextField({
@@ -39,12 +58,14 @@ export function TextField({
   hint,
   leadingIcon,
   required = false,
+  numeric = false,
   secureTextEntry,
   onFocus,
   onBlur,
   ...rest
 }: TextFieldProps) {
   const { colors } = useTheme();
+  const { locale } = useI18n();
   const [focused, setFocused] = useState(false);
   const [revealed, setRevealed] = useState(false);
 
@@ -91,7 +112,9 @@ export function TextField({
             styles.input,
             {
               color: colors.text,
-              fontFamily: fontFamily(TypeScale.body.weight),
+              fontFamily: numeric
+                ? numericFontFamily(TypeScale.body.weight, locale)
+                : fontFamily(TypeScale.body.weight),
               fontSize: TypeScale.body.size,
             },
           ]}

@@ -15,7 +15,7 @@ import { prefsStorage } from '@/lib/storage';
 import { Palette, type ColorScheme, type Colors } from './tokens';
 
 export * from './tokens';
-export { fontFamily, TabularNumbers, FontAssets } from './fonts';
+export { fontFamily, numericFontFamily, TabularNumbers, FontAssets } from './fonts';
 
 /** Mirrors the `theme` field on `PATCH /users/me/settings`. */
 export type ThemeMode = 'light' | 'dark' | 'system';

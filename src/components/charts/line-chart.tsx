@@ -10,6 +10,7 @@ import Svg, {
 } from "react-native-svg";
 
 import { Text } from "@/components/ui/text";
+import { useI18n, type I18n } from "@/i18n";
 import { Spacing, useTheme } from "@/theme";
 
 export type LinePoint = {
@@ -52,13 +53,34 @@ function niceMax(max: number): number {
   return 10 * magnitude;
 }
 
-function formatAxis(value: number): string {
-  if (value >= 1000) return `${Math.round(value / 100) / 10}k`;
-  return String(Math.round(value));
+/**
+ * Compact axis label, digits localised.
+ *
+ * Through `formatNumber` rather than `String()`: the axis was the one place in
+ * the app where figures reached the screen without passing the locale, so a
+ * Bangla chart carried Latin gridline numbers next to Bangla weekday labels.
+ *
+ * Fraction digits are chosen rather than fixed, because `1000` should read as
+ * "1k" and only `1500` as "1.5k" — a hardcoded 1 would render every round
+ * thousand as "১.০k".
+ *
+ * The `k` is left as Latin. Compaction is what keeps a four-figure label inside
+ * the 34pt gutter, and abbreviating "হাজার" is a wording decision rather than a
+ * formatting one.
+ */
+function formatAxis(
+  value: number,
+  formatNumber: I18n["formatNumber"],
+): string {
+  if (value < 1000) return formatNumber(Math.round(value));
+
+  const thousands = Math.round(value / 100) / 10;
+  return `${formatNumber(thousands, Number.isInteger(thousands) ? 0 : 1)}k`;
 }
 
 export function LineChart({ points }: { points: LinePoint[] }) {
   const { colors } = useTheme();
+  const { formatNumber } = useI18n();
   const [width, setWidth] = useState(0);
 
   const plotWidth = Math.max(width - GUTTER, 0);
@@ -104,11 +126,15 @@ export function LineChart({ points }: { points: LinePoint[] }) {
               <Text
                 key={index}
                 variant="micro"
+                // A gridline value is a figure, so it takes the numeral family
+                // like every other one. The weekday labels below the plot are
+                // words and stay in the interface font.
+                numeric
                 style={[
                   styles.axisLabel,
                   { color: colors.textTertiary, top: y(value) - 7 },
                 ]}>
-                {formatAxis(value)}
+                {formatAxis(value, formatNumber)}
               </Text>
             );
           })}

@@ -4,7 +4,17 @@ import { Radius, Spacing, useTheme } from '@/theme';
 
 import { Text } from './text';
 
-export type SegmentedOption<T extends string> = { value: T; label: string };
+export type SegmentedOption<T extends string> = {
+  value: T;
+  label: string;
+  /**
+   * Marks this segment's label as a figure rather than a word, which under `bn`
+   * sets it in the Bangla numeral family. Per option rather than per control on
+   * purpose: a threshold picker reads `৳৫০ | ৳১০০ | ৳২০০ | ৳৫০০ | অন্য`, so a
+   * flag on the track would drag that trailing word into the numeral font too.
+   */
+  numeric?: boolean;
+};
 
 export function SegmentedControl<T extends string>({
   options,
@@ -36,7 +46,11 @@ export function SegmentedControl<T extends string>({
                 ? { backgroundColor: colors.surface, borderColor: colors.borderStrong }
                 : { borderColor: 'transparent' },
             ]}>
-            <Text variant="subhead" color={selected ? 'text' : 'textTertiary'} align="center">
+            <Text
+              variant="subhead"
+              color={selected ? 'text' : 'textTertiary'}
+              align="center"
+              numeric={option.numeric}>
               {option.label}
             </Text>
           </Pressable>

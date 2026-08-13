@@ -5,7 +5,9 @@ import type {
   UsageAnalyticsQuery,
   UsagePoint,
 } from "@/api/types";
+import { portalMonthNumber } from "@/i18n";
 import { useApi } from "@/session";
+import type { UtilityMonthlyConsumption } from "@/utility";
 
 /** Days of history the weekday view averages over. */
 export const RHYTHM_WINDOW_DAYS = 28;
@@ -159,7 +161,143 @@ export function useWeekdayRhythm(meterId?: string) {
   };
 }
 
-function sum(points: { consumedCost: number }[]): number {
+/**
+ * Days of history before a burn rate is worth quoting.
+ *
+ * A week, so the rate has seen both a weekend and a working week. Below this
+ * the mean is one or two days wearing a month's clothing — and the figure it
+ * produces ("your balance lasts 40 days") is exactly the kind a user acts on.
+ */
+export const RUNWAY_MIN_OBSERVED_DAYS = 7;
+
+/**
+ * Beyond this the runway stops being a countdown and starts being a shrug.
+ * Capped rather than printed, so a meter idling at a few poisha a day cannot
+ * render "1,240 days" in a column three characters wide.
+ */
+export const RUNWAY_MAX_DAYS = 90;
+
+/**
+ * What a full day costs this meter, from the weekday means.
+ *
+ * Not `sum(points) / 7`. The backend divides each weekday by the days it
+ * actually observed, and reports `coverage` as the fraction of a day its
+ * samples span — so a point is "the mean cost of the 62% of a Tuesday we
+ * watched", not "a Tuesday". Dividing cost by coverage rather than by a day
+ * count fixes both distortions at once: weekdays with no readings contribute
+ * to neither side of the ratio, and a partly-sampled day is scaled up to the
+ * full day it stands for instead of being averaged in as cheap electricity.
+ *
+ * Null when the history is too thin — see `RUNWAY_MIN_OBSERVED_DAYS` — or when
+ * nothing was covered at all. Null rather than 0: "we cannot say" and "you
+ * spend nothing" lead to opposite advice.
+ */
+export function dailyBurnRate(
+  points: readonly UsagePoint[],
+  observedDays: number,
+): number | null {
+  if (observedDays < RUNWAY_MIN_OBSERVED_DAYS) return null;
+
+  const covered = points.reduce((total, point) => total + point.coverage, 0);
+  if (covered <= 0) return null;
+
+  return sum(points) / covered;
+}
+
+/**
+ * Whole days the balance covers at that rate.
+ *
+ * Floored, so the number is a promise the meter can keep: at ৳40 a day, ৳515
+ * is twelve days and change, and rounding that to thirteen invites the user to
+ * plan a recharge for the morning after the lights go out.
+ *
+ * Null unless every input supports an answer — an unknown or spent balance, or
+ * a rate we could not measure. Returning `Infinity` for a zero rate would put
+ * a literal "∞ days" in the card.
+ */
+export function estimateRunwayDays(
+  balance: number | null,
+  dailyRate: number | null,
+): number | null {
+  if (balance === null || balance <= 0) return null;
+  if (dailyRate === null || dailyRate <= 0) return null;
+
+  return Math.floor(balance / dailyRate);
+}
+
+/**
+ * A daily rate from the portal's monthly consumption instead of our own samples.
+ *
+ * The fallback for a meter the sweep has not watched for `RUNWAY_MIN_OBSERVED_DAYS`
+ * yet — a meter added this week, or any meter if the sweep has been down. The
+ * portal's monthly rows reach back months and arrive with the first load, so this
+ * answers on a meter's very first open, where `dailyBurnRate` can only shrug.
+ *
+ * Coarser than the sampled rate, and deliberately second in line: one figure for
+ * a whole month cannot see that the last fortnight was hotter than the first, and
+ * the sampled rate can. Callers are expected to mark what this produces as an
+ * estimate.
+ *
+ * **The current month is skipped, and that is the load-bearing part.** Its row
+ * holds usage-so-far, not a month, so dividing it by the month's full length
+ * would report a fraction of the true burn — a month 10 days in reads as a third
+ * of the real rate and triples the runway. Overstating is the harmful direction:
+ * it invites a recharge planned for after the supply has already cut out.
+ *
+ * Scans newest to oldest for the first complete month that actually drew
+ * something, so a month the meter sat idle falls through to a real one instead of
+ * reporting a zero rate.
+ */
+export function monthlyDailyRate(
+  rows: readonly UtilityMonthlyConsumption[],
+  now: Date,
+): number | null {
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+
+  const complete = rows
+    .map((row) => ({ row, month: portalMonthNumber(row.month) }))
+    .filter(
+      (entry): entry is { row: UtilityMonthlyConsumption; month: number } =>
+        entry.month !== null &&
+        // Strictly before the month we are standing in.
+        (entry.row.year < currentYear ||
+          (entry.row.year === currentYear && entry.month < currentMonth)),
+    )
+    .sort((a, b) => b.row.year * 12 + b.month - (a.row.year * 12 + a.month));
+
+  for (const { row, month } of complete) {
+    if (row.totalUsageAmount <= 0) continue;
+
+    // Day 0 of the next month is the last day of this one, which is also how the
+    // month's length is read without a leap-year table.
+    const days = new Date(row.year, month, 0).getDate();
+    if (days > 0) return row.totalUsageAmount / days;
+  }
+
+  return null;
+}
+
+/**
+ * How long the current balance lasts at the meter's recent daily average.
+ *
+ * Reads the same 28-day query as `useWeekdayRhythm` — same key, so React Query
+ * hands the home screen one instance and this costs no extra request wherever
+ * the rhythm card is already on screen.
+ */
+export function useBalanceRunway(balance: number | null, meterId?: string) {
+  const { points, observedDays, isPending } = useWeekdayRhythm(meterId);
+
+  const dailyRate = dailyBurnRate(points, observedDays);
+
+  return {
+    isPending,
+    dailyRate,
+    days: estimateRunwayDays(balance, dailyRate),
+  };
+}
+
+function sum(points: readonly { consumedCost: number }[]): number {
   return points.reduce((total, point) => total + point.consumedCost, 0);
 }
 
