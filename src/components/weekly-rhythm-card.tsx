@@ -18,6 +18,9 @@ import { Spacing } from "@/theme";
  * rather than disappearing. The card vanishing entirely was indistinguishable
  * from the screen having failed to load it, and an account that has genuinely
  * spent nothing is entitled to see that stated rather than inferred from a gap.
+ *
+ * A single weekday with nothing recorded is the opposite case: it is drawn as a
+ * gap, because there the surrounding days prove the meter was not idle.
  */
 export function WeeklyRhythmCard({ meterId }: { meterId?: string }) {
   const { t, formatNumber } = useI18n();
@@ -26,9 +29,11 @@ export function WeeklyRhythmCard({ meterId }: { meterId?: string }) {
 
   if (isLoading || isError || !hasEnoughHistory) return null;
 
-  // Seven spokes, always — a weekday with no readings is drawn at zero rather
-  // than dropped, because a five-sided "week" would read as a data shape
-  // instead of a gap.
+  // Seven spokes, always — dropping one would leave a five-sided "week" that
+  // reads as a data shape rather than a gap. But a spoke the range holds no
+  // figure for is passed as null, not zero: the backend omits a day whose usage
+  // was never published separately, and filling that with zero turns "we have
+  // no reading" into "you spent nothing" — the claim a reader would act on.
   const byWeekday = new Map(
     points.map((point) => [point.weekday, point.consumedCost]),
   );
@@ -37,7 +42,9 @@ export function WeeklyRhythmCard({ meterId }: { meterId?: string }) {
     const isoDay = index + 1;
     return {
       label: t(`analytics.weekday.${isoDay}` as never),
-      value: byWeekday.get(isoDay) ?? 0,
+      // `?? null` and not `|| null`: a weekday the portal genuinely settled at
+      // ৳0 is a measured zero and still belongs on the shape.
+      value: byWeekday.get(isoDay) ?? null,
     };
   });
 

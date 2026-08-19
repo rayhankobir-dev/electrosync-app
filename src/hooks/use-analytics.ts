@@ -181,15 +181,22 @@ export const RUNWAY_MAX_DAYS = 90;
  * What a full day costs this meter, from the weekday means.
  *
  * Not `sum(points) / 7`. The backend divides each weekday by the days it
- * actually observed, and reports `coverage` as the fraction of a day its
- * samples span — so a point is "the mean cost of the 62% of a Tuesday we
- * watched", not "a Tuesday". Dividing cost by coverage rather than by a day
- * count fixes both distortions at once: weekdays with no readings contribute
- * to neither side of the ratio, and a partly-sampled day is scaled up to the
- * full day it stands for instead of being averaged in as cheap electricity.
+ * actually observed, and reports `settledDays` as the days' worth of settlement
+ * time behind the cost — so a point is "the mean cost of the 62% of a Tuesday we
+ * watched", not "a Tuesday". Dividing cost by that rather than by a day count
+ * fixes both distortions at once: weekdays with no readings contribute to
+ * neither side of the ratio, and a partly-sampled day is scaled up to the full
+ * day it stands for instead of being averaged in as cheap electricity.
+ *
+ * `settledDays` and not `coverage`, which saturates at 1. When a missed reading
+ * makes the portal publish two days as one figure, that figure arrives against
+ * `coverage: 1` — so dividing by coverage counts two days of spend as one and
+ * overstates the rate by the whole batched day. On the observed gap that was
+ * ৳64.86/day against a true ৳54.05, and an overstated rate understates the
+ * runway. Safer than the reverse, but still a number the user is reading.
  *
  * Null when the history is too thin — see `RUNWAY_MIN_OBSERVED_DAYS` — or when
- * nothing was covered at all. Null rather than 0: "we cannot say" and "you
+ * nothing was settled at all. Null rather than 0: "we cannot say" and "you
  * spend nothing" lead to opposite advice.
  */
 export function dailyBurnRate(
@@ -198,10 +205,10 @@ export function dailyBurnRate(
 ): number | null {
   if (observedDays < RUNWAY_MIN_OBSERVED_DAYS) return null;
 
-  const covered = points.reduce((total, point) => total + point.coverage, 0);
-  if (covered <= 0) return null;
+  const settled = points.reduce((total, point) => total + point.settledDays, 0);
+  if (settled <= 0) return null;
 
-  return sum(points) / covered;
+  return sum(points) / settled;
 }
 
 /**
@@ -326,7 +333,10 @@ function padDays(
         date,
         consumedCost: 0,
         rechargedAmount: 0,
+        // Nothing settled on this day, so there is no time behind the zero —
+        // the pair is what tells the chart to draw it hollow.
         coverage: 0,
+        settledDays: 0,
       }
     );
   });

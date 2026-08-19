@@ -233,23 +233,42 @@ export type UsagePoint = {
   date?: string;
   /** ISO day of week, 1 = Monday … 7 = Sunday. Only for `weekday`. */
   weekday?: number;
+  /**
+   * Cost of the settlement periods that closed in this bucket.
+   *
+   * A day the portal never published a separate figure for is absent from
+   * `points` entirely rather than present at 0 — see `settledDays`. Callers
+   * filling a fixed axis must pad those as unknown, not as zero.
+   */
   consumedCost: number;
   rechargedAmount: number;
   /**
-   * Fraction of the bucket covered by readings, 0–1.
+   * Fraction of the bucket covered by the settlements its cost came from, 0–1.
    *
    * Below 1 the cost is a floor, not a total. Charting it as a normal value
    * would show missing data as a cheap day, so the UI marks these points
-   * rather than hiding the distinction.
+   * rather than hiding the distinction. Saturates at 1, so it cannot report a
+   * bucket holding more than its own length; `settledDays` can.
    */
   coverage: number;
+  /**
+   * Days' worth of settlement time behind `consumedCost`. Normally 1 for a
+   * daily bucket. Above 1 means one published figure covers several days
+   * because a reading was missed, so the cost is that whole period rather than
+   * one day of it — do not read such a bucket as a single day's spend.
+   */
+  settledDays: number;
 };
 
 export type UsageAnalytics = {
   granularity: UsageGranularity;
   currency: string;
   meterCount: number;
-  /** Distinct days in range carrying at least one reading. */
+  /**
+   * Distinct days in range that a settlement closed on, and whose usage is
+   * therefore separately known. A day merely crossed by a longer settlement
+   * period does not count.
+   */
   observedDays: number;
   points: UsagePoint[];
   total: { consumedCost: number; rechargedAmount: number };
