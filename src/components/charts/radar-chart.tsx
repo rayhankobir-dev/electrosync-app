@@ -8,15 +8,7 @@ import { useTheme } from "@/theme";
 export type RadarPoint = {
   /** Short label — full weekday names collide around a phone-width circle. */
   label: string;
-  /**
-   * Null when this weekday holds no published figure — a reading the sweep
-   * never captured, or one the portal batched into a neighbouring day. Such a
-   * spoke gets no vertex: the loop closes across it with a dashed edge, the
-   * same language the trend line uses for a stretch it did not measure.
-   * Plotting it at zero would state that nothing was spent, which is a
-   * different claim and the one a reader acts on.
-   */
-  value: number | null;
+  value: number;
 };
 
 const SIZE = 200;
@@ -44,7 +36,7 @@ export function RadarChart({ points }: { points: RadarPoint[] }) {
   const size = Math.min(width || SIZE, SIZE);
   const center = size / 2;
   const radius = center - LABEL_INSET;
-  const max = Math.max(...points.map((point) => point.value ?? 0), 0);
+  const max = Math.max(...points.map((point) => point.value), 0);
 
   /**
    * Every spoke at zero collapses the polygon onto the centre point, which
@@ -66,29 +58,12 @@ export function RadarChart({ points }: { points: RadarPoint[] }) {
     };
   };
 
-  /** Only the days with a figure. Spokes without one carry no vertex at all. */
-  const plotted = points.flatMap((point, index) =>
-    point.value === null ? [] : [{ ...vertex(index, point.value * scale), index }],
-  );
-
-  const polygon = plotted.map(({ x, y }) => `${x},${y}`).join(" ");
-
-  /**
-   * Edge by edge rather than one closed path, because an edge that jumps over
-   * an unknown spoke is dashed and a single polygon can only carry one dash
-   * pattern. Wraps at the end: weekdays are a cycle, so the last known day
-   * joins back to the first.
-   */
-  const edges =
-    plotted.length < 2
-      ? []
-      : plotted.map((from, order) => {
-          const to = plotted[(order + 1) % plotted.length];
-          const spokesApart =
-            (to.index - from.index + points.length) % points.length;
-
-          return { from, to, skipsUnknown: spokesApart > 1 };
-        });
+  const polygon = points
+    .map((point, index) => {
+      const { x, y } = vertex(index, point.value * scale);
+      return `${x},${y}`;
+    })
+    .join(" ");
 
   const ring = (fraction: number) =>
     points
@@ -114,7 +89,7 @@ export function RadarChart({ points }: { points: RadarPoint[] }) {
             />
           ))}
 
-          {points.map((point, index) => {
+          {points.map((_, index) => {
             const { x, y } = vertex(index, radius);
             return (
               <Line
@@ -125,40 +100,27 @@ export function RadarChart({ points }: { points: RadarPoint[] }) {
                 y2={y}
                 stroke={colors.border}
                 strokeWidth={1}
-                // A dashed spoke marks a day the week has no figure for, so the
-                // gap is legible on the grid itself and not only in the shape.
-                strokeDasharray={point.value === null ? "3 3" : undefined}
               />
             );
           })}
 
           {hasShape ? (
             <>
-              {/* Boundary drawn separately below, so the edges can differ. */}
               <Polygon
                 points={polygon}
                 fill={colors.primary}
                 fillOpacity={0.18}
-                stroke="none"
+                stroke={colors.primary}
+                strokeWidth={2}
+                strokeLinejoin="round"
               />
 
-              {edges.map(({ from, to, skipsUnknown }, index) => (
-                <Line
-                  key={index}
-                  x1={from.x}
-                  y1={from.y}
-                  x2={to.x}
-                  y2={to.y}
-                  stroke={colors.primary}
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeDasharray={skipsUnknown ? "3 3" : undefined}
-                />
-              ))}
-
-              {plotted.map(({ x, y, index }) => (
-                <Circle key={index} cx={x} cy={y} r={3} fill={colors.primary} />
-              ))}
+              {points.map((point, index) => {
+                const { x, y } = vertex(index, point.value * scale);
+                return (
+                  <Circle key={index} cx={x} cy={y} r={3} fill={colors.primary} />
+                );
+              })}
             </>
           ) : null}
         </Svg>
@@ -172,12 +134,7 @@ export function RadarChart({ points }: { points: RadarPoint[] }) {
               style={[
                 styles.label,
                 {
-                  // Dimmed when there is no figure behind the spoke, matching
-                  // the dashed grid line it labels.
-                  color:
-                    point.value === null
-                      ? colors.textTertiary
-                      : colors.textSecondary,
+                  color: colors.textSecondary,
                   // Centred on the vertex by offsetting half the label box,
                   // so labels sit evenly around the ring instead of hanging
                   // off to one side of it.
